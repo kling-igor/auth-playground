@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { User } from './interfaces/user.interface';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from './dto';
 import { v4 as uuidv4 } from 'uuid';
+
 const FAKE_USERS = [
   {
     id: '1',
@@ -24,11 +25,6 @@ export type CreatedUser = Partial<User>;
 @Injectable()
 export class UserService {
   async createUser(userDto: CreateUserDto): Promise<CreatedUser> {
-    const found = FAKE_USERS.find(user => user.email === userDto.email);
-    if (found) {
-      throw new ConflictException(`User with email <${userDto.email}> already exists`);
-    }
-
     const newUser = {
       id: uuidv4(),
       firstName: userDto.firstName,
