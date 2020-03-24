@@ -2,38 +2,28 @@ import { Injectable } from '@nestjs/common';
 import { User } from './interfaces/user.interface';
 import { CreateUserDto } from './dto';
 import { v4 as uuidv4 } from 'uuid';
+import * as argon2 from 'argon2';
 
-const FAKE_USERS = [
-  {
-    id: '1',
-    email: 'kling-igor@yandex.ru',
-    firstName: 'Igor',
-    lastName: 'Kling',
-    password: 'asasasasas',
-  },
-  {
-    id: '2',
-    email: 'jd@example.com',
-    firstName: 'John',
-    lastName: 'Dow',
-    password: 'fdfsfsfsfsf',
-  },
-];
+const FAKE_USERS = [];
 
 export type CreatedUser = Partial<User>;
 
 @Injectable()
 export class UserService {
   async createUser(userDto: CreateUserDto): Promise<CreatedUser> {
+    const password = await argon2.hash(userDto.password);
+
     const newUser = {
       id: uuidv4(),
       firstName: userDto.firstName,
       lastName: userDto.lastName,
       email: userDto.email,
-      password: userDto.password, // to be encrypted
+      password,
     };
 
     FAKE_USERS.push(newUser);
+
+    // console.log(FAKE_USERS);
 
     return {
       firstName: userDto.firstName,
@@ -55,8 +45,7 @@ export class UserService {
   }
 
   async checkPassword(password: string, user: User): Promise<boolean> {
-    return true;
-    // return await bcrypt.compare(password, user.password);
+    return await argon2.verify(user.password, password);
     // todo - register failed attempts count
   }
 }
