@@ -11,13 +11,18 @@ export type CreatedUser = Partial<User>;
 @Injectable()
 export class UserService {
   async createUser(userDto: CreateUserDto): Promise<CreatedUser> {
+    const email = userDto.email.toLowerCase();
     const password = await argon2.hash(userDto.password);
+
+    // for test purposes only
+    const role = email === 'kling-igor@yandex.ru' ? 'admin' : 'user';
 
     const newUser = {
       id: uuidv4(),
       ...userDto,
       email: userDto.email.toLowerCase(),
       password,
+      roles: [role],
     };
 
     FAKE_USERS.push(newUser);
