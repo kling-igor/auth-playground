@@ -15,15 +15,12 @@ export class UserService {
 
     const newUser = {
       id: uuidv4(),
-      firstName: userDto.firstName,
-      lastName: userDto.lastName,
+      ...userDto,
       email: userDto.email.toLowerCase(),
       password,
     };
 
     FAKE_USERS.push(newUser);
-
-    // console.log(FAKE_USERS);
 
     return {
       firstName: userDto.firstName,
@@ -32,12 +29,28 @@ export class UserService {
     };
   }
 
+  async updateUser(user: User): Promise<boolean> {
+    const found = this.getUserById(user.id);
+    if (!found) return false;
+
+    const allKeysExceptId = Object.keys(found).filter(key => key !== 'id');
+    for (const key of allKeysExceptId) {
+      found[key] = user[key];
+    }
+
+    return true;
+  }
+
+  private async getUser(key: string, value: string): Promise<User> {
+    return FAKE_USERS.find(user => user[key] === value);
+  }
+
   async getUserById(id: string): Promise<User> {
-    return FAKE_USERS.find(user => user.id === id);
+    return this.getUser('id', id);
   }
 
   async getUserByEmail(email: string): Promise<User> {
-    return FAKE_USERS.find(user => user.email === email);
+    return this.getUser('email', email);
   }
 
   async allUsers(offset = 0, limit = 10): Promise<User[]> {
@@ -47,5 +60,9 @@ export class UserService {
   async checkPassword(password: string, user: User): Promise<boolean> {
     return await argon2.verify(user.password, password);
     // todo - register failed attempts count
+  }
+
+  async checkRefreshToken(refreshToken: string, user: User): Promise<boolean> {
+    return await argon2.verify(user.refreshToken, refreshToken);
   }
 }

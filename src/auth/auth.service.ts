@@ -1,10 +1,17 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { addMinutes, compareAsc } from 'date-fns';
+import * as argon2 from 'argon2';
+import { v4 as uuidv4 } from 'uuid';
 
 import { UserService } from '../user/user.service';
 import { User } from '../user/interfaces/user.interface';
 import { SignedInUserDto } from './dto/signedin-user.dto';
 import { SignInUserDto, SignUpUserDto } from './dto';
+
+const REFRESH_EXPIRES_IN_DAYS = parseInt(process.env.REFRESH_EXPIRES_IN_DAYS || '');
+const makeRefreshToken = () => uuidv4().replace(/\-/g, '');
+const hash = async (str: string) => await argon2.hash(str);
 
 @Injectable()
 export class AuthService {
@@ -17,7 +24,14 @@ export class AuthService {
       throw new ConflictException(`User with email <${signUpUserDto.email}> already exists`);
     }
 
-    const { email, id: userId } = await this.userService.createUser(signUpUserDto);
+    const refreshToken = makeRefreshToken();
+    const tokenHash = await hash(refreshToken);
+
+    const { email, id: userId } = await this.userService.createUser({
+      ...signUpUserDto,
+      refreshToken: tokenHash,
+      expirationDate: addMinutes(Date.now(), REFRESH_EXPIRES_IN_DAYS),
+    });
 
     // @see user.decorator.ts
     const jwtPayload = { userId };
@@ -25,7 +39,7 @@ export class AuthService {
     return {
       email,
       jwt: this.jwtService.sign(jwtPayload),
-      refreshToken: '',
+      refreshToken,
     };
   }
 
@@ -44,12 +58,68 @@ export class AuthService {
 
     const { id: userId, email } = user;
 
+    // creating a new refresh token
+    const refreshToken = makeRefreshToken();
+    const tokenHash = await hash(refreshToken);
+
+    const updated = await this.userService.updateUser({
+      ...user,
+      refreshToken: tokenHash,
+      expirationDate: addMinutes(Date.now(), REFRESH_EXPIRES_IN_DAYS),
+    });
+
+    if (!updated) {
+      throw new BadRequestException('Unable to issue new refresh token');
+    }
+
     const jwtPayload = { userId };
 
     return {
       email,
       jwt: this.jwtService.sign(jwtPayload),
-      refreshToken: '',
+      refreshToken,
+    };
+  }
+
+  async refresh(email: string, refreshToken: string): Promise<SignedInUserDto> {
+    const user: User = await this.userService.getUserByEmail(email);
+    if (!user) {
+      throw new BadRequestException('Invalid refresh token (user with email not found)');
+    }
+
+    const matched = await this.userService.checkRefreshToken(refreshToken, user);
+
+    if (!matched) {
+      throw new BadRequestException('Invalid refresh token');
+    }
+
+    const { id: userId, expirationDate } = user;
+
+    // if the first date is after the second
+    if (compareAsc(Date.now(), expirationDate) >= 0) {
+      throw new BadRequestException('Invalid refresh token (token expired)');
+    }
+
+    // creating a new refresh token
+    const newRefreshToken = makeRefreshToken();
+    const tokenHash = await hash(newRefreshToken);
+
+    const updated = await this.userService.updateUser({
+      ...user,
+      refreshToken: tokenHash,
+      expirationDate: addMinutes(Date.now(), REFRESH_EXPIRES_IN_DAYS),
+    });
+
+    if (!updated) {
+      throw new BadRequestException('Unable to issue new refresh token');
+    }
+
+    const jwtPayload = { userId };
+
+    return {
+      email,
+      jwt: this.jwtService.sign(jwtPayload),
+      refreshToken: newRefreshToken,
     };
   }
 }

@@ -35,4 +35,10 @@ export class AuthController {
   async signIn(@Body() signInUserDto: SignInUserDto): Promise<SignedInUserDto> {
     return this.authService.signIn(signInUserDto);
   }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body('email') email: string, @Body('refreshToken') refreshToken: string): Promise<SignedInUserDto> {
+    return this.authService.refresh(email, refreshToken);
+  }
 }
