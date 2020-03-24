@@ -11,7 +11,7 @@ export class AuthService {
   constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
 
   async signUp(signUpUserDto: SignUpUserDto): Promise<SignedInUserDto> {
-    const found: User = await this.userService.getUserByEmail(signUpUserDto.email);
+    const found: User = await this.userService.getUserByEmail(signUpUserDto.email.toLowerCase());
 
     if (found) {
       throw new ConflictException(`User with email <${signUpUserDto.email}> already exists`);
@@ -30,7 +30,7 @@ export class AuthService {
   }
 
   async signIn(signInUserDto: SignInUserDto): Promise<SignedInUserDto> {
-    const user: User = await this.userService.getUserByEmail(signInUserDto.email);
+    const user: User = await this.userService.getUserByEmail(signInUserDto.email.toLowerCase());
 
     if (!user) {
       throw new NotFoundException('Wrong email or password.');

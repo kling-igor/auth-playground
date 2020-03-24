@@ -17,7 +17,7 @@ export class UserService {
       id: uuidv4(),
       firstName: userDto.firstName,
       lastName: userDto.lastName,
-      email: userDto.email,
+      email: userDto.email.toLowerCase(),
       password,
     };
 
