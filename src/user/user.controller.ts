@@ -46,8 +46,8 @@ export class UsersController {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Get('all')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Profiles received.' })
@@ -55,8 +55,8 @@ export class UsersController {
   @ApiForbiddenResponse({ description: 'Operation not permitted' })
   @ApiOperation({ summary: 'Get users profiles' })
   async getAll(@Query('offset') offset = 0, @Query('limit') limit = 10): Promise<Partial<User>[]> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const users = await this.userService.allUsers(offset, limit);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return users.map(({ id, password, refreshToken, expirationDate, ...rest }) => rest);
   }
 }

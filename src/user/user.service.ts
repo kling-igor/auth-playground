@@ -17,10 +17,12 @@ export class UserService {
     // for test purposes only
     const role = email === 'kling-igor@yandex.ru' ? 'admin' : 'user';
 
+    const id = uuidv4();
+
     const newUser = {
-      id: uuidv4(),
+      id,
       ...userDto,
-      email: userDto.email.toLowerCase(),
+      email,
       password,
       roles: [role],
     };
@@ -28,9 +30,11 @@ export class UserService {
     FAKE_USERS.push(newUser);
 
     return {
+      id,
+      email,
       firstName: userDto.firstName,
       lastName: userDto.lastName,
-      email: userDto.email,
+      roles: [role],
     };
   }
 

@@ -33,14 +33,14 @@ export class AuthService {
     const refreshToken = makeRefreshToken();
     const tokenHash = await hash(refreshToken);
 
-    const { email, id: userId } = await this.userService.createUser({
+    const { email, id: userId, roles = [] } = await this.userService.createUser({
       ...signUpUserDto,
       refreshToken: tokenHash,
       expirationDate: addMinutes(Date.now(), REFRESH_EXPIRES_IN_DAYS),
     });
 
     // @see user.decorator.ts
-    const jwtPayload = { userId };
+    const jwtPayload = { userId, roles };
 
     return {
       email,
@@ -62,7 +62,7 @@ export class AuthService {
       throw new NotFoundException('Wrong email or password.');
     }
 
-    const { id: userId, email } = user;
+    const { id: userId, email, roles = [] } = user;
 
     // creating a new refresh token
     const refreshToken = makeRefreshToken();
@@ -78,7 +78,7 @@ export class AuthService {
       throw new BadRequestException('Unable to issue new refresh token');
     }
 
-    const jwtPayload = { userId };
+    const jwtPayload = { userId, roles };
 
     return {
       email,
@@ -99,7 +99,7 @@ export class AuthService {
       throw new BadRequestException('Invalid refresh token');
     }
 
-    const { id: userId, expirationDate } = user;
+    const { id: userId, expirationDate, roles = [] } = user;
 
     // if the first date is after the second
     if (compareAsc(Date.now(), expirationDate) >= 0) {
@@ -120,7 +120,7 @@ export class AuthService {
       throw new BadRequestException('Unable to issue new refresh token');
     }
 
-    const jwtPayload = { userId };
+    const jwtPayload = { userId, roles };
 
     return {
       email,
