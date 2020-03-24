@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 import { UserService } from '../user/user.service';
 import { User } from '../user/interfaces/user.interface';
@@ -7,7 +8,7 @@ import { SignInUserDto, SignUpUserDto } from './dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
 
   async signUp(signUpUserDto: SignUpUserDto): Promise<SignedInUserDto> {
     const found: User = await this.userService.getUserByEmail(signUpUserDto.email);
@@ -16,11 +17,14 @@ export class AuthService {
       throw new ConflictException(`User with email <${signUpUserDto.email}> already exists`);
     }
 
-    const { email } = await this.userService.createUser(signUpUserDto);
+    const { email, id: userId } = await this.userService.createUser(signUpUserDto);
+
+    // @see user.decorator.ts
+    const jwtPayload = { userId };
 
     return {
       email,
-      jwt: '',
+      jwt: this.jwtService.sign(jwtPayload),
       refreshToken: '',
     };
   }
@@ -38,9 +42,13 @@ export class AuthService {
       throw new NotFoundException('Wrong email or password.');
     }
 
+    const { id: userId, email } = user;
+
+    const jwtPayload = { userId };
+
     return {
-      email: user.email,
-      jwt: '',
+      email,
+      jwt: this.jwtService.sign(jwtPayload),
       refreshToken: '',
     };
   }
