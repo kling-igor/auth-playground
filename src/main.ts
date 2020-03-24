@@ -2,6 +2,9 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as compression from 'compression';
+import * as helmet from 'helmet';
+import hpp from 'hpp';
 
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
@@ -10,6 +13,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: true,
   });
+
+  app.use(hpp());
+  app.use(helmet());
+  app.enableCors();
+  app.use(compression());
 
   const configService = app.get(ConfigService);
 
