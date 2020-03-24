@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { addMinutes, compareAsc } from 'date-fns';
 import * as argon2 from 'argon2';
@@ -84,7 +90,7 @@ export class AuthService {
   async refresh(email: string, refreshToken: string): Promise<SignedInUserDto> {
     const user: User = await this.userService.getUserByEmail(email);
     if (!user) {
-      throw new BadRequestException('Invalid refresh token (user with email not found)');
+      throw new NotFoundException('Invalid refresh token (user with email not found)');
     }
 
     const matched = await this.userService.checkRefreshToken(refreshToken, user);
@@ -97,7 +103,7 @@ export class AuthService {
 
     // if the first date is after the second
     if (compareAsc(Date.now(), expirationDate) >= 0) {
-      throw new BadRequestException('Invalid refresh token (token expired)');
+      throw new UnauthorizedException('Invalid refresh token (token expired)');
     }
 
     // creating a new refresh token
