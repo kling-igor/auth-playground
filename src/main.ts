@@ -4,7 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as compression from 'compression';
 import * as helmet from 'helmet';
-import hpp from 'hpp';
+import * as hpp from 'hpp';
 
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
@@ -14,10 +14,10 @@ async function bootstrap() {
     bodyParser: true,
   });
 
-  app.use(hpp());
   app.use(helmet());
-  app.enableCors();
   app.use(compression());
+  app.use(hpp());
+  app.enableCors();
 
   const configService = app.get(ConfigService);
 
