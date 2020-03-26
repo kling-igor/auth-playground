@@ -1,6 +1,7 @@
 import { Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Connection } from 'mongoose';
+import { Request } from 'express';
 
 import { DATABASE_CONNECTION } from './constants';
 import { DatabaseConnection } from './db-connection';
@@ -10,8 +11,8 @@ export const databaseConnectionFactory = [
     scope: Scope.REQUEST,
     inject: [REQUEST],
     useFactory: (req: Request): string => {
-      const marmToken = req.headers['x-marm-token'];
-      const projectVersion = req.headers['x-project-version'];
+      const marmToken = req.headers['x-marm-token'] as string;
+      const projectVersion = req.headers['x-project-version'] as string;
       const project = marmToken.split('_').shift();
       const configId = projectVersion.replace('v1d', '');
       const dbName = `${project}_${configId}`;
