@@ -1,13 +1,20 @@
-import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class ConfigRepository {
+  // constructor(
+  //   @InjectModel('view') private readonly view: Model<any>,
+  //   @InjectModel('controller') private readonly controller: Model<any>,
+  // ) {}
+
   constructor(
-    @InjectModel('view') private readonly view: Model<any>,
-    @InjectModel('controller') private readonly controller: Model<any>,
-  ) {}
+    @Inject('view') private readonly view: Model<any>,
+    @Inject('controller') private readonly controller: Model<any>,
+  ) {
+    console.log('CREATING CONFIG REPOSITORY');
+  }
 
   async findAll(collection: string, lastUptime): Promise<any[]> {
     const model = this[collection];

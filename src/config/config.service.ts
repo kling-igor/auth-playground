@@ -6,9 +6,11 @@ import { PERMITTED_COLLECTIONS } from './constants';
 
 @Injectable()
 export class ConfigurationService {
-  constructor(private readonly configDb: ConfigRepository) {}
+  constructor(private readonly configDb: ConfigRepository) {
+    console.log('CREATING CONFIG SERVICE');
+  }
 
-  async uploadConfiguration(configuration: any): Promise<void> {
+  async uploadConfiguration(dbName: string, configuration: any): Promise<void> {
     const collections = Object.keys(configuration).filter(item => PERMITTED_COLLECTIONS.includes(item));
 
     for await (const collection of collections) {
@@ -18,7 +20,7 @@ export class ConfigurationService {
     return;
   }
 
-  async syncConfiguration(collections: [string], lastUptime = 0): Promise<any> {
+  async syncConfiguration(dbName: string, collections: [string], lastUptime = 0): Promise<any> {
     const checkedCollections = collections.filter(item => PERMITTED_COLLECTIONS.includes(item));
 
     const result = {};

@@ -18,15 +18,15 @@ import { ConfigurationModule } from './config/config.module';
       // envFilePath: '.development.env',
       // ignoreEnvFile: true, // this ignores file and relies on environment variables from the runtime environment
     }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URL'),
-        useUnifiedTopology: true,
-        useNewUrlParser: true,
-      }),
-      inject: [ConfigService],
-    }),
+    // MongooseModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   useFactory: async (configService: ConfigService) => ({
+    //     uri: configService.get<string>('MONGO_URL'),
+    //     useUnifiedTopology: true,
+    //     useNewUrlParser: true,
+    //   }),
+    //   inject: [ConfigService],
+    // }),
     AuthModule,
     UserModule,
     FileModule,
