@@ -21,7 +21,11 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  app.setGlobalPrefix(configService.get<string>('APP_ROUTE_PREFIX'));
+  const APP_ROUTE_PREFIX = configService.get<string>('APP_ROUTE_PREFIX');
+  const APP_API_VERSION = configService.get<string>('APP_API_VERSION');
+  const APP_PORT = configService.get<number>('APP_PORT');
+
+  app.setGlobalPrefix(APP_ROUTE_PREFIX);
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, disableErrorMessages: false }));
 
@@ -30,7 +34,7 @@ async function bootstrap() {
     .addBasicAuth()
     .setTitle('Auth Playground')
     .setDescription('Nest.js based auth playground')
-    .setVersion(`v${configService.get<string>('APP_API_VERSION')}`)
+    .setVersion(`v${APP_API_VERSION}`)
     .addTag('API')
     .build();
 
@@ -43,6 +47,6 @@ async function bootstrap() {
 
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(configService.get<number>('APP_PORT'));
+  await app.listen(APP_PORT);
 }
 bootstrap();
