@@ -25,15 +25,19 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Response } from 'express';
 
+import { ProjectFilesService } from './project-files.service';
+
 @Controller(':project/file')
 export class ProjectFilesController {
+  constructor(private readonly projectFileService: ProjectFilesService) {}
+
   @Get('get/:fileId/:userToken')
   async getFile(@Param('project') project: string, @Param('fileId') fileId: string) {
     console.log('PROJECT:', project);
     console.log('FILE ID:', fileId);
 
     // lookup file in DB - get path - responce file stream
-    return;
+    return this.projectFileService.getProjectFile(project, fileId);
   }
 
   @Get('static/*')
@@ -62,11 +66,11 @@ export class ProjectFilesController {
   async getThumbnail(
     @Param('project') project: string,
     @Param('fileId') fileId: string,
-    @Param('width') width: string,
-    @Param('height') height: string,
+    @Param('width') width: number,
+    @Param('height') height: number,
   ) {
     // lookup in fs
 
-    return;
+    return this.projectFileService.getProjectFileThumbnail(project, fileId, width, height);
   }
 }

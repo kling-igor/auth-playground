@@ -21,3 +21,14 @@ https://confluence.altarix.ru/confluence/pages/viewpage.action?pageId=91261282
 # Core API
 
 https://confluence.altarix.ru/confluence/pages/viewpage.action?pageId=88418157
+
+# Other Links
+
+## Sending HTTP requests, understanding multipart/form-data
+
+https://wanago.io/2019/03/18/node-js-typescript-6-sending-http-requests-understanding-multipart-form-data/
+
+## Image Processing
+
+https://github.com/lovell/sharp
+https://github.com/oliver-moran/jimp
