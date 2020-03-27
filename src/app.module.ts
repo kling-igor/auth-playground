@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { FileModule } from './file/file.module';
 import { ConfigurationModule } from './config/config.module';
+import { ProjectFilesModule } from './project-files/project-files.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ConfigurationModule } from './config/config.module';
     UserModule,
     FileModule,
     ConfigurationModule,
+    ProjectFilesModule,
   ],
   // controllers: [],
   // providers: [],
