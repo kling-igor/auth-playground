@@ -17,7 +17,7 @@ import { ConfigurationService } from './config.service';
 
 @Controller('config')
 export class ConfigurationController {
-  constructor(private configService: ConfigurationService) {
+  constructor(private readonly configService: ConfigurationService) {
     console.log('CREATING CONFIG CONTROLLER');
   }
 

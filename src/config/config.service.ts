@@ -26,7 +26,7 @@ export class ConfigurationService {
     const result = {};
 
     for await (const collection of checkedCollections) {
-      const found = await this.configDb.findAll(collection, lastUptime);
+      const found = await this.configDb.findAll(dbName, collection, lastUptime);
       result[collection] = found;
     }
 
