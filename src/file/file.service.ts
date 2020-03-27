@@ -12,7 +12,7 @@ export class FileService {
     return Promise.resolve();
   }
 
-  async upload(files: [any]): Promise<any> {
+  async upload(files: [any], fileInfo: any): Promise<any> {
     return files.map(({ originalname, filename }) => ({ originalname, filename }));
   }
 }

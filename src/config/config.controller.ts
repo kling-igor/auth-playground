@@ -13,13 +13,23 @@ import {
   Header,
 } from '@nestjs/common';
 
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+  ApiUnauthorizedResponse,
+  ApiOkResponse,
+  ApiForbiddenResponse,
+} from '@nestjs/swagger';
+
 import { ConfigurationService } from './config.service';
 
-@Controller('config')
+@ApiTags('Config')
+@Controller()
 export class ConfigurationController {
-  constructor(private readonly configService: ConfigurationService) {
-    console.log('CREATING CONFIG CONTROLLER');
-  }
+  constructor(private readonly configService: ConfigurationService) {}
 
   @Post('upload')
   @HttpCode(HttpStatus.OK)
