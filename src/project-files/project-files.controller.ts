@@ -52,8 +52,6 @@ export class ProjectFilesController {
       filePath,
     );
 
-    console.log(fullPath);
-
     const exists = await fs.exists(fullPath);
     if (exists) {
       response.sendFile(fullPath);

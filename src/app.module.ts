@@ -21,8 +21,9 @@ import { ProjectFilesModule } from './project-files/project-files.module';
     }),
     // MongooseModule.forRootAsync({
     //   imports: [ConfigModule],
+    //   connectionName: 'fileService',
     //   useFactory: async (configService: ConfigService) => ({
-    //     uri: configService.get<string>('MONGO_URL'),
+    //     uri: configService.get<string>('FILE_SERVICE_MONGO_URL'),
     //     useUnifiedTopology: true,
     //     useNewUrlParser: true,
     //   }),
