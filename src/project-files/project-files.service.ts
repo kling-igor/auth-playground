@@ -1,6 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Model } from 'mongoose';
 import * as path from 'path';
+import * as fs from 'fs-extra';
+import * as sharp from 'sharp';
 
 import { File } from '../file/file.interface';
 import { FILE_MODEL } from '../file/constants';
@@ -12,22 +14,36 @@ export class ProjectFilesService {
     private fileModel: Model<File>,
   ) {}
 
-  async getFilePath(project: string, fileId: string) {
+  async getFilePath(fileId: string): Promise<string> {
     const foundFile = await this.fileModel.findOne({ file_id: fileId });
-    console.log('foundFile:', foundFile);
-
     if (foundFile) {
       const { filename: fileName } = foundFile;
       return path.join(fileName.substring(0, 1), fileName.substring(0, 2), fileName.substring(2, 4), fileName);
     }
   }
 
-  async getThumbnail(project: string, fileId: string, width: number, height: number) {
-    console.log('CREATES THUMBNAIL:', project, fileId, width, height);
+  async getThumbnailPath(fileId: string, width: string, height: string): Promise<string> {
+    const foundFile = await this.fileModel.findOne({ file_id: fileId });
+    if (foundFile) {
+      const { filename: fileName } = foundFile;
+      return path.join(
+        fileName.substring(0, 1),
+        fileName.substring(0, 2),
+        fileName.substring(2, 4),
+        `${width}x${height}`,
+        fileName,
+      );
+    }
+  }
 
-    // thumbnail/<project>/1/17/2e/<width>x<height>/filename.png
-    // const info = await sharp(filepath).resize(width, height).toFile(outputPath)
+  async createThumbnail(sourceFilePath: string, targetFilePath: string, width: number, height: number): Promise<void> {
+    await fs.ensureDir(path.dirname(targetFilePath));
 
-    return;
+    await sharp(sourceFilePath)
+      .resize(width, height, {
+        kernel: sharp.kernel.nearest,
+        fit: 'fill',
+      })
+      .toFile(targetFilePath);
   }
 }
