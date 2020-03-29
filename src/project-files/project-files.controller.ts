@@ -31,13 +31,26 @@ import { ProjectFilesService } from './project-files.service';
 export class ProjectFilesController {
   constructor(private readonly projectFileService: ProjectFilesService) {}
 
-  @Get('get/:fileId/:userToken')
-  async getFile(@Param('project') project: string, @Param('fileId') fileId: string) {
-    console.log('PROJECT:', project);
-    console.log('FILE ID:', fileId);
+  // @Get('get/:fileId/:userToken')
+  @Get('get/:fileId')
+  async getFile(@Param('project') project: string, @Param('fileId') fileId: string, @Res() response: Response) {
+    const filePath = await this.projectFileService.getFilePath(project, fileId);
 
-    // lookup file in DB - get path - responce file stream
-    return this.projectFileService.getProjectFile(project, fileId);
+    if (filePath) {
+      try {
+        const fullPath = path.join(
+          path.dirname(require.main.filename),
+          process.env.STATIC_FILES_PATH,
+          project,
+          filePath,
+        );
+        return response.sendFile(fullPath);
+      } catch (e) {
+        console.log('E:', e);
+      }
+    }
+
+    response.sendStatus(HttpStatus.NOT_FOUND);
   }
 
   @Get('static/*')
@@ -52,12 +65,13 @@ export class ProjectFilesController {
       filePath,
     );
 
-    const exists = await fs.exists(fullPath);
-    if (exists) {
-      response.sendFile(fullPath);
-    } else {
-      response.sendStatus(HttpStatus.NOT_FOUND);
+    try {
+      return response.sendFile(fullPath);
+    } catch (e) {
+      console.log('E:', e);
     }
+
+    response.sendStatus(HttpStatus.NOT_FOUND);
   }
 
   @Get('thumbnail/:fileId/width/:width/height/:height/:userToken')
@@ -69,6 +83,6 @@ export class ProjectFilesController {
   ) {
     // lookup in fs
 
-    return this.projectFileService.getProjectFileThumbnail(project, fileId, width, height);
+    return this.projectFileService.getThumbnail(project, fileId, width, height);
   }
 }

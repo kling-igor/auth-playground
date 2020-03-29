@@ -20,6 +20,10 @@ export class ConfigRepository {
       }, {});
 
       this.models.set(dbName, models);
+
+      connection.once('disconnected', () => {
+        this.models.delete(dbName);
+      });
     }
 
     return models[collection];

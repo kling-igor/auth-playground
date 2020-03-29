@@ -96,7 +96,9 @@ export class FileService {
         } else {
           const previouslyUploaded = await this.fileModel.findOne({ file_hash: hash });
 
-          const uploadedFile = new this.fileModel({
+          console.log('previouslyUploaded', previouslyUploaded);
+
+          const fileDescription = {
             file_id: fieldname,
             file_hash: hash,
             file_type: mimetype,
@@ -106,11 +108,16 @@ export class FileService {
             upload_date: Date.now(),
             project: 'conf',
             static: false,
-          });
+          };
 
-          await uploadedFile.save();
-
-          result[fieldname] = { code: 200, message: previouslyUploaded ? 'Duplicate' : 'File uploaded' };
+          if (previouslyUploaded) {
+            await this.fileModel.findByIdAndUpdate(previouslyUploaded._id, fileDescription);
+            result[fieldname] = { code: 200, message: 'Duplicate' };
+          } else {
+            const uploadedFile = new this.fileModel(fileDescription);
+            await uploadedFile.save();
+            result[fieldname] = { code: 200, message: 'File uploaded' };
+          }
         }
       }
     }
