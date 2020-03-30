@@ -28,9 +28,9 @@ export class DatabaseConnection {
     const MONGO_PASSWORD = this.configService.get<string>('MONGO_PASSWORD');
 
     let uri;
-    if (dbName === 'config_1') {
+    if (dbName === 'conf_1') {
       uri = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@ds115874.mlab.com:15874/${dbName}`;
-    } else if (dbName === 'config_2') {
+    } else if (dbName === 'conf_2') {
       uri = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@ds163561.mlab.com:63561/${dbName}`;
     }
 

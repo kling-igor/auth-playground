@@ -6,15 +6,17 @@ import { PERMITTED_COLLECTIONS } from './constants';
 
 @Injectable()
 export class ConfigurationService {
-  constructor(private readonly configDb: ConfigRepository) {
-    console.log('CREATING CONFIG SERVICE');
-  }
+  constructor(private readonly configDb: ConfigRepository) {}
 
   async uploadConfiguration(dbName: string, configuration: any): Promise<void> {
-    const collections = Object.keys(configuration).filter(item => PERMITTED_COLLECTIONS.includes(item));
+    const configurationKeys = Object.keys(configuration);
+    const collections = configurationKeys.filter(item => PERMITTED_COLLECTIONS.includes(item));
 
     for await (const collection of collections) {
       // save documents
+      // console.log(`SAVE COLLECTION '${collection}' documents:${configuration[collection].length}`);
+
+      const result = await this.configDb.upsert(dbName, collection, configuration[collection]);
     }
 
     return;

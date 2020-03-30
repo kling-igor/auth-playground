@@ -29,16 +29,28 @@ export class ConfigRepository {
     return models[collection];
   }
 
-  async findAll(dbName, collection: string, lastUptime): Promise<any[]> {
+  async findAll(dbName: string, collection: string, lastUptime): Promise<any[]> {
     const model = await this.getModel(dbName, collection);
 
     if (model) {
       const result = await model.find({ uptime: { $gte: lastUptime } }, null, { lean: true });
 
-      return result.map(({ _id: id, ...rest }) => ({ id, ...rest }));
+      return result.map(({ _id: id, name, uptime, content }) => ({ id, name, uptime, ...content }));
     }
 
     console.log('Invalid collection name:', collection);
     return [];
+  }
+
+  async upsert(dbName: string, collection: string, documents: [any]): Promise<any> {
+    const model = await this.getModel(dbName, collection);
+    if (model) {
+      for await (const document of documents) {
+        const { id, name, uptime, ...content } = document;
+
+        await model.updateOne({ _id: id }, { name, uptime, content }, { upsert: true });
+      }
+    }
+    return;
   }
 }

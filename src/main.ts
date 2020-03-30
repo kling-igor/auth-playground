@@ -5,19 +5,25 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as compression from 'compression';
 import * as helmet from 'helmet';
 import * as hpp from 'hpp';
+import * as bodyParser from 'body-parser';
 
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    bodyParser: true,
+    bodyParser: false,
   });
 
   app.use(helmet());
   app.use(compression());
   app.use(hpp());
   app.enableCors();
+  // use body parser so we can grab information from POST requests
+  // parse application/x-www-form-urlencoded
+  app.use(bodyParser.urlencoded({ extended: true }));
+  // parse application/json
+  app.use(bodyParser.json({ limit: '100mb' }));
 
   const configService = app.get(ConfigService);
 
