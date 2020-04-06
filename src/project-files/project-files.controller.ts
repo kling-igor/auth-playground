@@ -70,7 +70,17 @@ export class ProjectFilesController {
     response.sendStatus(HttpStatus.NOT_FOUND);
   }
 
-  // @Get('thumbnail/:fileId/width/:width/height/:height/:userToken') // it is insecure to store token in GET request
+  @Get('thumbnail/:fileId/width/:width/height/:height/:userToken') // it is insecure to store token in GET request
+  async getThumbnailWithToken(
+    @Param('project') project: string,
+    @Param('fileId') fileId: string,
+    @Param('width') width: string,
+    @Param('height') height: string,
+    @Res() response: Response,
+  ) {
+    return response.redirect(`/${project}/file/thumbnail/${fileId}/width/${width}/height/${height}`);
+  }
+
   @Get('thumbnail/:fileId/width/:width/height/:height')
   async getThumbnail(
     @Param('project') project: string,

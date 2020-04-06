@@ -3,13 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import * as mongoose from 'mongoose';
-mongoose.set('debug', true);
+// mongoose.set('debug', true);
 
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { FileModule } from './file/file.module';
 import { ConfigurationModule } from './config/config.module';
 import { ProjectFilesModule } from './project-files/project-files.module';
+import { DataModule } from './data/data.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ProjectFilesModule } from './project-files/project-files.module';
     FileModule,
     ConfigurationModule,
     ProjectFilesModule,
+    DataModule,
   ],
   // controllers: [],
   // providers: [],
