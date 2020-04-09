@@ -33,7 +33,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix(APP_ROUTE_PREFIX);
 
-  app.useGlobalPipes(new ValidationPipe({ transform: true, disableErrorMessages: false }));
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, disableErrorMessages: false }));
 
   const options = new DocumentBuilder()
     .addBearerAuth()
@@ -51,7 +51,7 @@ async function bootstrap() {
     // ],
   });
 
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(APP_PORT);
 }

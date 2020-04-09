@@ -12,6 +12,9 @@ import { Model } from 'mongoose';
 import { File } from './file.interface';
 import { FILE_MODEL } from './constants';
 
+import { FileInfoCreateDto } from './dto/file-info.create.dto';
+import { FileUploadResponseDto, FileUploadStatus } from './dto/file-upload.response.dto';
+
 declare type UploadedFile = {
   fieldname: string;
   originalname: string;
@@ -21,26 +24,6 @@ declare type UploadedFile = {
   filename: string;
   path: string;
   size: number;
-};
-
-declare type FileInfo = {
-  id: string;
-  hash: string;
-  name: string;
-  type: string;
-  encoding: 'binary' | 'base64';
-  static: boolean;
-};
-
-declare type FileUploadStatus = {
-  code: number;
-  message: string;
-};
-
-declare type UploadResult = {
-  code: number;
-  message: string;
-  data: Record<string, FileUploadStatus>;
 };
 
 /*
@@ -71,20 +54,23 @@ export class FileService {
   ) {}
 
   async download(filePath: string): Promise<any> {
+    // TODO:  to be done
     return Promise.resolve();
   }
 
-  async upload(files: [UploadedFile], fileInfo: [FileInfo]): Promise<UploadResult> {
-    // console.log('FILES:', files);
-    // console.log('INFO:', fileInfo);
+  async upload(files: [UploadedFile], fileInfo: [FileInfoCreateDto]): Promise<FileUploadResponseDto> {
+    console.log('FILES:', files);
+    console.log('FILE INFO:', fileInfo, typeof fileInfo);
 
     const result: Record<string, FileUploadStatus> = {};
+    // const result: FileUploadStatus[] = [];
 
     for await (const file of files) {
       const { fieldname, filename, mimetype } = file;
       const info = fileInfo.find(item => item.id === fieldname);
       if (!info) {
-        result[fieldname] = { code: 400, message: 'No file content' };
+        result[fieldname] = { id: fieldname, code: 400, message: 'No file content' };
+        // result.push({ id: fieldname, code: 400, message: 'No file content' });
       } else {
         // performance hit!!!
         // * wrong hash - некорректный запрос - хэш файла не соответствует переданному в информации о файле
@@ -92,7 +78,8 @@ export class FileService {
         const { hash, static: isStatic } = info;
 
         if (isStatic) {
-          result[fieldname] = { code: 200, message: 'File uploaded' };
+          result[fieldname] = { id: fieldname, code: 200, message: 'File uploaded' };
+          // result.push({ id: fieldname, code: 200, message: 'File uploaded' });
         } else {
           const previouslyUploaded = await this.fileModel.findOne({ file_hash: hash });
 
@@ -103,20 +90,22 @@ export class FileService {
             file_hash: hash,
             file_type: mimetype,
             filename: filename,
-            user_id: 'ZERO',
+            user_id: 'ZERO', // TODO user real user info!!!
             upload_status: 'success',
             upload_date: Date.now(),
-            project: 'conf',
+            project: 'conf', // TODO: user real project
             static: false,
           };
 
           if (previouslyUploaded) {
             await this.fileModel.findByIdAndUpdate(previouslyUploaded._id, fileDescription);
-            result[fieldname] = { code: 200, message: 'Duplicate' };
+            result[fieldname] = { id: fieldname, code: 200, message: 'Duplicate' };
+            // result.push({ id: fieldname, code: 200, message: 'Duplicate' });
           } else {
             const uploadedFile = new this.fileModel(fileDescription);
             await uploadedFile.save();
-            result[fieldname] = { code: 200, message: 'File uploaded' };
+            result[fieldname] = { id: fieldname, code: 200, message: 'File uploaded' };
+            // result.push({ id: fieldname, code: 200, message: 'File uploaded' });
           }
         }
       }

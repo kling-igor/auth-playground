@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Res,
   Query,
   Body,
   Headers,
@@ -13,6 +14,8 @@ import {
   Header,
 } from '@nestjs/common';
 
+import { Response } from 'express';
+
 import {
   ApiTags,
   ApiBearerAuth,
@@ -23,6 +26,9 @@ import {
   ApiOkResponse,
   ApiForbiddenResponse,
 } from '@nestjs/swagger';
+
+import * as path from 'path';
+import * as fs from 'fs-extra';
 
 import { ConfigurationService } from './config.service';
 
@@ -64,5 +70,23 @@ export class ConfigurationController {
       code: HttpStatus.OK,
       message: '',
     };
+  }
+
+  // FOR DBT TEST PURPOSES
+  @Get('sync')
+  @HttpCode(HttpStatus.OK)
+  async getConfiguration(@Res() response: Response) {
+    const filePath = path.resolve(path.dirname(require.main.filename), process.env.STATIC_FILES_PATH, 'config.json');
+
+    if (filePath) {
+      const exists = await fs.pathExists(filePath);
+      if (exists) {
+        return response.sendFile(filePath);
+      }
+    }
+
+    console.log('FILE NOT FOUND', filePath);
+
+    response.sendStatus(HttpStatus.NOT_FOUND);
   }
 }

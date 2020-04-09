@@ -4,7 +4,7 @@ import { MulterModule } from '@nestjs/platform-express';
 
 import { FileController } from './file.conroller';
 import { FileService } from './file.service';
-import { fileServiceDatabaseProvider } from './fileservice.provider';
+import { fileServiceDatabaseProvider } from './file-service.provider';
 import { fileProvider } from './file.provider';
 
 @Module({
