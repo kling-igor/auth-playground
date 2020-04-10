@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 
 import { DatabaseConnection } from './db-connection';
 import { PERMITTED_COLLECTIONS } from './constants';
@@ -14,6 +14,10 @@ export class ConfigRepository {
     let models = this.models.get(dbName);
     if (!models) {
       const connection = await this.databaseConnection.getConnection(dbName);
+
+      if (!connection) {
+        throw new NotFoundException(`Database '${dbName}' does not exist`);
+      }
 
       models = PERMITTED_COLLECTIONS.reduce((acc, collection) => {
         return { ...acc, [collection]: connection.model(collection, ConfigItemSchema, collection) };

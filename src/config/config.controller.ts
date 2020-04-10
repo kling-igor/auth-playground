@@ -1,18 +1,6 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Res,
-  Query,
-  Body,
-  Headers,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-  ClassSerializerInterceptor,
-  UseInterceptors,
-  Header,
-} from '@nestjs/common';
+import { Controller, Post, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
+
+import { plainToClass } from 'class-transformer';
 
 import { Response } from 'express';
 
@@ -20,30 +8,36 @@ import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
-  ApiConsumes,
   ApiBody,
   ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
-  ApiForbiddenResponse,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 
-import * as path from 'path';
-import * as fs from 'fs-extra';
+// import * as path from 'path';
+// import * as fs from 'fs-extra';
 
 import { ConfigurationService } from './config.service';
 
+import { UploadConfigurationRequestDto } from './dto/upload-configuration.request.dto';
+import { DownloadConfigurationResponseDto, ConfigurationSlice } from './dto/download-configuration.response.dto';
+import { DownloadConfigurationRequestDto } from './dto/download-configuration.request.dto';
 @ApiTags('Config')
 @Controller()
 export class ConfigurationController {
   constructor(private readonly configService: ConfigurationService) {}
 
   @Post('upload')
+  @ApiOperation({ summary: 'Upload configuration to specified database' })
+  @ApiOkResponse({ description: 'Upload configuration successfully' })
+  @ApiBody({ type: UploadConfigurationRequestDto })
   @HttpCode(HttpStatus.OK)
   async upload(
     @Headers('x-marm-token') token: string,
     @Headers('x-project-version') projectVersion: string,
-    @Body() configuration: any,
-  ) {
+    @Body() configuration: UploadConfigurationRequestDto,
+  ): Promise<void> {
     const project = token.split('_').shift();
     const configId = projectVersion.replace('v1d', '');
     const dbName = `${project}_${configId}`;
@@ -52,26 +46,30 @@ export class ConfigurationController {
   }
 
   @Post('sync')
+  @ApiOperation({ summary: 'Download configuration from specified database' })
+  @ApiOkResponse({ description: 'Download configuration successfully' })
+  @ApiNotFoundResponse({ description: 'Missing proper header values to access configuration database' })
+  @ApiBody({ type: DownloadConfigurationRequestDto })
   @HttpCode(HttpStatus.OK)
   async sync(
     @Headers('x-marm-token') token: string,
     @Headers('x-project-version') projectVersion: string,
     @Body('get') collections: [string],
     @Body('uptime') lastUptime: number,
-  ) {
+  ): Promise<DownloadConfigurationResponseDto> {
     const project = token.split('_').shift();
     const configId = projectVersion.replace('v1d', '');
     const dbName = `${project}_${configId}`;
 
-    const data = await this.configService.syncConfiguration(dbName, collections, lastUptime);
+    const data: ConfigurationSlice = await this.configService.downloadConfiguration(dbName, collections, lastUptime);
 
-    return {
+    return plainToClass(DownloadConfigurationResponseDto, {
       data: [data],
       code: HttpStatus.OK,
       message: '',
-    };
+    });
   }
-
+  /*
   // FOR DBT TEST PURPOSES
   @Get('sync')
   @HttpCode(HttpStatus.OK)
@@ -89,4 +87,5 @@ export class ConfigurationController {
 
     response.sendStatus(HttpStatus.NOT_FOUND);
   }
+*/
 }

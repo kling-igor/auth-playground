@@ -16,6 +16,12 @@ export class FileUploadStatus {
   public message: string;
 }
 
+// interface Dictionary<T> {
+//   [key: string]: T;
+// }
+
+// class Statuses implements Dictionary<FileUploadStatus> {}
+
 @Expose()
 export class FileUploadResponseDto {
   @ApiResponseProperty()
