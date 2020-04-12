@@ -1,8 +1,11 @@
-import { Controller, Req, Post, Body, Headers, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiBody, ApiUnauthorizedResponse, ApiOkResponse } from '@nestjs/swagger';
 
 import { DataService } from './data.service';
+
+import { Project } from '../common/project.decorator';
+import { ConfigId } from '../common/config-id.decorator';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -18,8 +21,12 @@ export class DataController {
   @ApiOperation({ summary: 'Save documents', description: 'Save documents to specified project database' })
   @ApiOkResponse({ description: 'Document saved.' })
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })
-  async save(@Req() req, @Body('name') modelName: string, @Body('objects') documents: [any]): Promise<[any]> {
-    const { project, configId } = req;
+  async save(
+    @Project() project: string,
+    @ConfigId() configId: string,
+    @Body('name') modelName: string,
+    @Body('objects') documents: [any],
+  ): Promise<[any]> {
     return this.dataService.save(project, configId, modelName, documents);
   }
 
@@ -30,7 +37,8 @@ export class DataController {
   @ApiOkResponse({ description: 'Document collection.' })
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async findAll(
-    @Req() req,
+    @Project() project: string,
+    @ConfigId() configId: string,
     @Body('name') modelName: string,
     @Body('name') filters: [Record<string, any>],
     @Body('name') fields: [string],
@@ -38,7 +46,6 @@ export class DataController {
     @Body('name') limit: number,
     @Body('name') offset: number,
   ): Promise<any> {
-    const { project, configId } = req;
     return this.dataService.findAll(project, configId, modelName, filters, fields, sort, limit, offset);
   }
 }

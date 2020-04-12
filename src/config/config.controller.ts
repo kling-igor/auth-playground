@@ -1,4 +1,4 @@
-import { Controller, Req, Post, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 
 import { plainToClass } from 'class-transformer';
 
@@ -23,6 +23,10 @@ import { ConfigurationService } from './config.service';
 import { UploadConfigurationRequestDto } from './dto/upload-configuration.request.dto';
 import { DownloadConfigurationResponseDto, ConfigurationSlice } from './dto/download-configuration.response.dto';
 import { DownloadConfigurationRequestDto } from './dto/download-configuration.request.dto';
+
+import { Project } from '../common/project.decorator';
+import { ConfigId } from '../common/config-id.decorator';
+
 @ApiTags('Configuration')
 @Controller()
 export class ConfigurationController {
@@ -33,8 +37,11 @@ export class ConfigurationController {
   @ApiOkResponse({ description: 'Upload configuration successfully' })
   @ApiBody({ type: UploadConfigurationRequestDto })
   @HttpCode(HttpStatus.OK)
-  async upload(@Req() req, @Body() configuration: UploadConfigurationRequestDto): Promise<void> {
-    const { project, configId } = req;
+  async upload(
+    @Project() project: string,
+    @ConfigId() configId: string,
+    @Body() configuration: UploadConfigurationRequestDto,
+  ): Promise<void> {
     const dbName = `${project}_${configId}`;
 
     await this.configService.uploadConfiguration(dbName, configuration);
@@ -47,11 +54,11 @@ export class ConfigurationController {
   @ApiBody({ type: DownloadConfigurationRequestDto })
   @HttpCode(HttpStatus.OK)
   async sync(
-    @Req() req,
+    @Project() project: string,
+    @ConfigId() configId: string,
     @Body('get') collections: [string],
     @Body('uptime') lastUptime: number,
   ): Promise<DownloadConfigurationResponseDto> {
-    const { project, configId } = req;
     const dbName = `${project}_${configId}`;
 
     const data: ConfigurationSlice = await this.configService.downloadConfiguration(dbName, collections, lastUptime);
