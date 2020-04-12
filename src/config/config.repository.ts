@@ -33,6 +33,14 @@ export class ConfigRepository {
     return models[collection];
   }
 
+  async findModel(dbName: string, modelName: string): Promise<any> {
+    const model = await this.getModel(dbName, 'model');
+
+    if (model) {
+      return await model.findOne({ name: modelName }, null, { lean: true });
+    }
+  }
+
   async findAll(dbName: string, collection: string, lastUptime): Promise<any[]> {
     const model = await this.getModel(dbName, collection);
 

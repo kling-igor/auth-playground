@@ -13,8 +13,8 @@ import {
 } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
-import { SignInUserDto, SignUpUserDto } from './dto';
-import { SignedInUserDto } from './dto/signedin-user.dto';
+import { SignInUserRequestDto, SignUpUserRequestDto } from './dto';
+import { SignInUserResponseDto } from './dto/signin-user.response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -23,34 +23,37 @@ export class AuthController {
 
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  @ApiCreatedResponse({ description: 'Signed up successfully', type: SignedInUserDto })
+  @ApiCreatedResponse({ description: 'Signed up successfully', type: SignInUserResponseDto })
   @ApiBadRequestResponse({ description: 'Missing credentials' })
   @ApiConflictResponse({ description: 'User already exists' })
-  @ApiBody({ type: SignUpUserDto })
+  @ApiBody({ type: SignUpUserRequestDto })
   @ApiOperation({ summary: 'Creating a new user account' })
-  async signUp(@Body() signUpUserDto: SignUpUserDto): Promise<SignedInUserDto> {
+  async signUp(@Body() signUpUserDto: SignUpUserRequestDto): Promise<SignInUserResponseDto> {
     return this.authService.signUp(signUpUserDto);
   }
 
   @Post('signin')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Signed in successfully', type: SignedInUserDto })
+  @ApiOkResponse({ description: 'Signed in successfully', type: SignInUserResponseDto })
   @ApiBadRequestResponse({ description: 'Missing credentials' })
   @ApiNotFoundResponse({ description: 'Invalid credentials' })
-  @ApiBody({ type: SignInUserDto })
+  @ApiBody({ type: SignInUserRequestDto })
   @ApiOperation({ summary: 'Signing in user by email:password credentials' })
-  async signIn(@Body() signInUserDto: SignInUserDto): Promise<SignedInUserDto> {
+  async signIn(@Body() signInUserDto: SignInUserRequestDto): Promise<SignInUserResponseDto> {
     return this.authService.signIn(signInUserDto);
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Refreshed successfully', type: SignedInUserDto })
+  @ApiOkResponse({ description: 'Refreshed successfully', type: SignInUserResponseDto })
   @ApiBadRequestResponse({ description: 'Missing email or refreshToken' })
   @ApiNotFoundResponse({ description: 'Invalid email' })
   @ApiUnauthorizedResponse({ description: 'Token expired' })
   @ApiOperation({ summary: 'Refresh user JWT/refreshToken by previously granted refresh token' })
-  async refresh(@Body('email') email: string, @Body('refreshToken') refreshToken: string): Promise<SignedInUserDto> {
+  async refresh(
+    @Body('email') email: string,
+    @Body('refreshToken') refreshToken: string,
+  ): Promise<SignInUserResponseDto> {
     return this.authService.refresh(email, refreshToken);
   }
 }

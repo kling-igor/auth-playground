@@ -9,6 +9,6 @@ import { DatabaseConnection } from '../common/db-connection';
   imports: [DatabaseConnection],
   controllers: [ConfigurationController],
   providers: [DatabaseConnection, ConfigurationService, ConfigRepository],
-  exports: [ConfigurationService],
+  exports: [ConfigurationService, ConfigRepository],
 })
 export class ConfigurationModule {}

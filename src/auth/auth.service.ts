@@ -12,8 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { UserService } from '../user/user.service';
 import { User } from '../user/interfaces/user.interface';
-import { SignedInUserDto } from './dto/signedin-user.dto';
-import { SignInUserDto, SignUpUserDto } from './dto';
+import { SignInUserResponseDto } from './dto/signin-user.response.dto';
+import { SignInUserRequestDto, SignUpUserRequestDto } from './dto';
 
 const REFRESH_EXPIRES_IN_DAYS = parseInt(process.env.REFRESH_EXPIRES_IN_DAYS || '');
 const makeRefreshToken = () => uuidv4().replace(/\-/g, '');
@@ -23,7 +23,7 @@ const hash = async (str: string) => await argon2.hash(str);
 export class AuthService {
   constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
 
-  async signUp(signUpUserDto: SignUpUserDto): Promise<SignedInUserDto> {
+  async signUp(signUpUserDto: SignUpUserRequestDto): Promise<SignInUserResponseDto> {
     const found: User = await this.userService.getUserByEmail(signUpUserDto.email.toLowerCase());
 
     if (found) {
@@ -49,7 +49,7 @@ export class AuthService {
     };
   }
 
-  async signIn(signInUserDto: SignInUserDto): Promise<SignedInUserDto> {
+  async signIn(signInUserDto: SignInUserRequestDto): Promise<SignInUserResponseDto> {
     const user: User = await this.userService.getUserByEmail(signInUserDto.email.toLowerCase());
 
     if (!user) {
@@ -87,7 +87,7 @@ export class AuthService {
     };
   }
 
-  async refresh(email: string, refreshToken: string): Promise<SignedInUserDto> {
+  async refresh(email: string, refreshToken: string): Promise<SignInUserResponseDto> {
     const user: User = await this.userService.getUserByEmail(email);
     if (!user) {
       throw new NotFoundException('Invalid refresh token (user with email not found)');

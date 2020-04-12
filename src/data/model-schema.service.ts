@@ -1,35 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseConnection } from '../common/db-connection';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigRepository } from '../config/config.repository';
 
 @Injectable()
 export class ModelSchemaService {
   // handmade memcached
   private modelSchemas: Map<string, any> = new Map<string, any>();
 
-  constructor(private readonly databaseConnection: DatabaseConnection) {}
+  constructor(private readonly configRepository: ConfigRepository) {}
 
   async getSchema(modelName: string, project: string, configId: string): Promise<any> {
     const key = `${modelName}_${project}_${configId}`;
-    // запрашиваем в кеше по ключу key
 
-    // если нет то берем из коллекции models findOne({name:modelName})
-    // разворачиваем content
+    let schema = this.modelSchemas.get(key);
 
-    // кладем в кеш
+    if (!schema) {
+      const dbName = `${project}_${configId}`;
 
-    // возвращаем данные
-    return {
-      source: {
-        name: 'docs',
-        type: 'doc',
-      },
-      fields: {
-        id: 'string',
-        template: 'string',
-        date: 'object',
-        uptime: 'number',
-      },
-      primaryKey: ['id'],
-    };
+      const model = await this.configRepository.findModel(dbName, modelName);
+
+      if (!model) {
+        throw new NotFoundException(`Model '${modelName}' does not exist in db '${dbName}'`);
+      }
+
+      const {
+        content: { source, fields, primaryKey = ['id'] },
+      } = model;
+
+      schema = {
+        source,
+        fields,
+        primaryKey,
+      };
+
+      this.modelSchemas.set(key, schema);
+    }
+
+    return schema;
   }
 }
