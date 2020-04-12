@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Req, Post, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
 
 import { plainToClass } from 'class-transformer';
 
@@ -33,13 +33,8 @@ export class ConfigurationController {
   @ApiOkResponse({ description: 'Upload configuration successfully' })
   @ApiBody({ type: UploadConfigurationRequestDto })
   @HttpCode(HttpStatus.OK)
-  async upload(
-    @Headers('x-marm-token') token: string,
-    @Headers('x-project-version') projectVersion: string,
-    @Body() configuration: UploadConfigurationRequestDto,
-  ): Promise<void> {
-    const project = token.split('_').shift();
-    const configId = projectVersion.replace('v1d', '');
+  async upload(@Req() req, @Body() configuration: UploadConfigurationRequestDto): Promise<void> {
+    const { project, configId } = req;
     const dbName = `${project}_${configId}`;
 
     await this.configService.uploadConfiguration(dbName, configuration);
@@ -52,13 +47,11 @@ export class ConfigurationController {
   @ApiBody({ type: DownloadConfigurationRequestDto })
   @HttpCode(HttpStatus.OK)
   async sync(
-    @Headers('x-marm-token') token: string,
-    @Headers('x-project-version') projectVersion: string,
+    @Req() req,
     @Body('get') collections: [string],
     @Body('uptime') lastUptime: number,
   ): Promise<DownloadConfigurationResponseDto> {
-    const project = token.split('_').shift();
-    const configId = projectVersion.replace('v1d', '');
+    const { project, configId } = req;
     const dbName = `${project}_${configId}`;
 
     const data: ConfigurationSlice = await this.configService.downloadConfiguration(dbName, collections, lastUptime);

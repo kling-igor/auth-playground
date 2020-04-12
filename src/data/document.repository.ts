@@ -41,7 +41,7 @@ export class DocumentRepository {
       return await model.findOneAndUpdate(
         { _id: id },
         { name, uptime, content },
-        { upsert: true, new: true, lean: true },
+        { upsert: true, new: true, lean: true, useFindAndModify: false },
       );
     }
   }

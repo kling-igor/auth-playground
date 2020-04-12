@@ -10,7 +10,8 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "incremental": true
+    "incremental": true,
+    "typeRoots": ["src/index.d.ts", "node_modules/@types"]
   },
   "exclude": ["node_modules", "dist"]
 }

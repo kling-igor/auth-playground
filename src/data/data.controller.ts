@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Req, Post, Body, Headers, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiBody, ApiUnauthorizedResponse, ApiOkResponse } from '@nestjs/swagger';
 
@@ -18,14 +18,8 @@ export class DataController {
   @ApiOperation({ summary: 'Save documents', description: 'Save documents to specified project database' })
   @ApiOkResponse({ description: 'Document saved.' })
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })
-  async save(
-    @Headers('x-marm-token') token: string,
-    @Headers('x-project-version') projectVersion: string,
-    @Body('name') modelName: string,
-    @Body('objects') documents: [any],
-  ): Promise<[any]> {
-    const project = token.split('_').shift();
-    const configId = projectVersion.replace('v1d', '');
+  async save(@Req() req, @Body('name') modelName: string, @Body('objects') documents: [any]): Promise<[any]> {
+    const { project, configId } = req;
     return this.dataService.save(project, configId, modelName, documents);
   }
 
@@ -36,8 +30,7 @@ export class DataController {
   @ApiOkResponse({ description: 'Document collection.' })
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async findAll(
-    @Headers('x-marm-token') token: string,
-    @Headers('x-project-version') projectVersion: string,
+    @Req() req,
     @Body('name') modelName: string,
     @Body('name') filters: [Record<string, any>],
     @Body('name') fields: [string],
@@ -45,8 +38,7 @@ export class DataController {
     @Body('name') limit: number,
     @Body('name') offset: number,
   ): Promise<any> {
-    const project = token.split('_').shift();
-    const configId = projectVersion.replace('v1d', '');
+    const { project, configId } = req;
     return this.dataService.findAll(project, configId, modelName, filters, fields, sort, limit, offset);
   }
 }
