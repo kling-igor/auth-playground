@@ -45,7 +45,7 @@ export class DataController {
     @Body('name') sort: [Record<string, number>],
     @Body('name') limit: number,
     @Body('name') offset: number,
-  ): Promise<any> {
+  ): Promise<[any]> {
     return this.dataService.findAll(project, configId, modelName, filters, fields, sort, limit, offset);
   }
 }

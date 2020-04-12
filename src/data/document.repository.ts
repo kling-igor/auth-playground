@@ -10,7 +10,7 @@ export class DocumentRepository {
 
   constructor(private readonly databaseConnection: DatabaseConnection) {}
 
-  private async getModel(dbName, collection) {
+  private async getModel(dbName, collection): Promise<any> {
     const key = `${dbName}_${collection}`;
     let model = this.models.get(key);
     if (!model) {
@@ -32,17 +32,19 @@ export class DocumentRepository {
     return model;
   }
 
-  async save(project: string, collection: string, document: any) {
+  async save(project: string, collection: string, document: any): Promise<any> {
     const model = await this.getModel(project, collection);
+    const { id = ObjectID.generate(), name, uptime, ...content } = document;
 
-    if (model) {
-      const { id = ObjectID.generate(), name, uptime, ...content } = document;
+    return await model.findOneAndUpdate(
+      { _id: id },
+      { name, uptime, content },
+      { upsert: true, new: true, lean: true, useFindAndModify: false },
+    );
+  }
 
-      return await model.findOneAndUpdate(
-        { _id: id },
-        { name, uptime, content },
-        { upsert: true, new: true, lean: true, useFindAndModify: false },
-      );
-    }
+  async find(project: string, collection: string, filter = {}, options = {}): Promise<[any]> {
+    const model = await this.getModel(project, collection);
+    return await model.find(filter, null, { ...options, lean: true });
   }
 }

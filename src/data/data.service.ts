@@ -178,6 +178,27 @@ export class DataService {
     const preparedFilters: Options = prepareFieldsFilter(filters);
     const options: Options = makeOptions(fields, sort, limit, offset);
 
+    // получаем схему модели
+    const schema = await this.modelSchemaService.getSchema(modelName, project, configId);
+
+    if (!schema) {
+      throw new BadRequestException(`Unable to find model '${modelName}'`);
+    }
+
+    if (!schema.source) {
+      throw new BadRequestException(`Unable to find model '${modelName}' source`);
+    }
+
+    const {
+      source: { name: collection },
+    } = schema;
+
+    const found = await this.documentRepository.find(project, collection, preparedFilters, options);
+
+    if (found) {
+      return found.map(({ _id, uptime, content }) => ({ id: _id, uptime, ...content }));
+    }
+
     // $collection = $this->getDb()->selectCollection($name);
 
     // заменяем в filter все id на _id
@@ -190,8 +211,6 @@ export class DataService {
     //     unset($conf['_id']);
     //     yield $conf;
     // }
-
-    return;
   }
 }
 
