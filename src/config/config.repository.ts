@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 
-import { DatabaseConnection } from './db-connection';
+import { DatabaseConnection } from '../common/db-connection';
 import { PERMITTED_COLLECTIONS } from './constants';
-import { ConfigItemSchema } from './schemas/item.schema';
+import { ConfigItemSchema } from '../common/item.schema';
 
 @Injectable()
 export class ConfigRepository {

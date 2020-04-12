@@ -32,10 +32,12 @@ export class DatabaseConnection {
     let uri;
 
     // mLab usage case (unable create database on SaaS on the fly)
-    if (dbName === 'conf_1') {
-      uri = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@ds115874.mlab.com:15874/${dbName}`;
+    if (dbName === 'conf') {
+      uri = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@ds115874.mlab.com:15874/conf`;
+    } else if (dbName === 'conf_1') {
+      uri = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@ds115874.mlab.com:15874/conf_1`;
     } else if (dbName === 'conf_2') {
-      uri = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@ds163561.mlab.com:63561/${dbName}`;
+      uri = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@ds163561.mlab.com:63561/conf_2`;
     }
 
     if (uri) {

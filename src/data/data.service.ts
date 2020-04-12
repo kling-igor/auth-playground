@@ -7,6 +7,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
+import { ModelSchemaService } from './model-schema.service';
+import { DocumentRepository } from './document.repository';
+
 const querySelectors = {
   equal: '$eq',
   gt: '$gt',
@@ -131,17 +134,41 @@ const isValidId = (id: string): boolean => /^[0-9a-z]{24}$/.test(id);
 
 @Injectable()
 export class DataService {
-  async save(project: string, modelName: string, documents: [any]): Promise<any> {
-    // foreach ($objects as &$object) {
-    // сохраняем монговский id в результате
-    // 	$object['id'] = $this->mongoStorage->save($object, $this->collectionName);
-    // }
+  constructor(
+    private readonly modelSchemaService: ModelSchemaService,
+    private readonly documentRepository: DocumentRepository,
+  ) {}
 
-    return; // нужно вернуть все документы, id в них будет уже монговский
+  async save(project: string, configId: string, modelName: string, documents: [any]): Promise<any> {
+    // получаем схему модели
+
+    const schema = await this.modelSchemaService.getSchema(modelName, project, configId);
+
+    if (!schema) {
+      throw new BadRequestException(`Unable to find model '${modelName}'`);
+    }
+
+    if (!schema.source) {
+      throw new BadRequestException(`Unable to find model '${modelName}' source`);
+    }
+
+    const {
+      source: { name: collection },
+    } = schema;
+
+    const savedDocuments = [];
+
+    for await (const document of documents) {
+      const { _id, uptime, content } = await this.documentRepository.save(project, collection, document);
+      savedDocuments.push({ id: _id, uptime, ...content });
+    }
+
+    return savedDocuments;
   }
 
   async findAll(
     project: string,
+    configId: string,
     modelName: string,
     filters: [Record<string, any>],
     fields: [string],

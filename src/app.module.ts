@@ -12,6 +12,8 @@ import { ConfigurationModule } from './config/config.module';
 import { ProjectFilesModule } from './project-files/project-files.module';
 import { DataModule } from './data/data.module';
 
+import { DatabaseConnection } from './common/db-connection';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,6 +40,6 @@ import { DataModule } from './data/data.module';
     DataModule,
   ],
   // controllers: [],
-  // providers: [],
+  providers: [DatabaseConnection],
 })
 export class AppModule {}

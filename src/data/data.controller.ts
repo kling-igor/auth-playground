@@ -12,7 +12,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class DataController {
   constructor(private readonly dataService: DataService) {}
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Post('save')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Save documents', description: 'Save documents to specified project database' })
@@ -20,14 +20,16 @@ export class DataController {
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async save(
     @Headers('x-marm-token') token: string,
+    @Headers('x-project-version') projectVersion: string,
     @Body('name') modelName: string,
     @Body('objects') documents: [any],
-  ): Promise<any> {
+  ): Promise<[any]> {
     const project = token.split('_').shift();
-    return this.dataService.save(project, modelName, documents);
+    const configId = projectVersion.replace('v1d', '');
+    return this.dataService.save(project, configId, modelName, documents);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Post('findall')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Fetch documents', description: 'Fetch documents' })
@@ -35,6 +37,7 @@ export class DataController {
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async findAll(
     @Headers('x-marm-token') token: string,
+    @Headers('x-project-version') projectVersion: string,
     @Body('name') modelName: string,
     @Body('name') filters: [Record<string, any>],
     @Body('name') fields: [string],
@@ -43,6 +46,7 @@ export class DataController {
     @Body('name') offset: number,
   ): Promise<any> {
     const project = token.split('_').shift();
-    return this.dataService.findAll(project, modelName, filters, fields, sort, limit, offset);
+    const configId = projectVersion.replace('v1d', '');
+    return this.dataService.findAll(project, configId, modelName, filters, fields, sort, limit, offset);
   }
 }
