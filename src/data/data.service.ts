@@ -141,7 +141,6 @@ export class DataService {
 
   async save(project: string, configId: string, modelName: string, documents: [any]): Promise<any> {
     // получаем схему модели
-
     const schema = await this.modelSchemaService.getSchema(modelName, project, configId);
 
     if (!schema) {
