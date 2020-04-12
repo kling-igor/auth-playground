@@ -1,24 +1,12 @@
-import {
-  Controller,
-  Get,
-  Res,
-  Query,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-  ClassSerializerInterceptor,
-  UseInterceptors,
-  Param,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Res, HttpStatus, Param, UseGuards } from '@nestjs/common';
 
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
+  ApiNotFoundResponse,
   ApiUnauthorizedResponse,
   ApiOkResponse,
-  ApiForbiddenResponse,
 } from '@nestjs/swagger';
 
 import * as fs from 'fs-extra';
@@ -26,6 +14,8 @@ import * as path from 'path';
 import { Response } from 'express';
 
 import { ProjectFilesService } from './project-files.service';
+
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 const getProjectFilePath = project => filePath =>
   path.join(path.dirname(require.main.filename), process.env.STATIC_FILES_PATH, project, filePath);
@@ -36,12 +26,32 @@ const getProjectStaticFilePath = project => filePath =>
 const getThumbnailFilePath = project => filePath =>
   path.join(path.dirname(require.main.filename), process.env.THUMBNAIL_FILES_PATH, project, filePath);
 
+@ApiTags('File')
+@ApiBearerAuth()
 @Controller(':project/file')
 export class ProjectFilesController {
   constructor(private readonly projectFileService: ProjectFilesService) {}
 
-  // @Get('get/:fileId/:userToken')
+  @UseGuards(JwtAuthGuard)
+  @Get('get/:fileId/:userToken')
+  @ApiOperation({ summary: 'Download project file', description: 'Downloads project file by specified fileId' })
+  @ApiOkResponse({ description: 'Download file' })
+  @ApiNotFoundResponse({ description: 'File not found' })
+  @ApiUnauthorizedResponse({ description: 'Not authorized.' })
+  async getFileWithToken(
+    @Param('project') project: string,
+    @Param('fileId') fileId: string,
+    @Param('userToken') userToken: string,
+    @Res() response: Response,
+  ) {
+    return response.redirect(`get/${fileId}`);
+  }
+
   @Get('get/:fileId')
+  @ApiOperation({ summary: 'Download project file', description: 'Downloads project file by specified fileId' })
+  @ApiOkResponse({ description: 'Download file' })
+  @ApiNotFoundResponse({ description: 'File not found' })
+  @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async getFile(@Param('project') project: string, @Param('fileId') fileId: string, @Res() response: Response) {
     const filePath = await this.projectFileService.getFilePath(fileId);
 
@@ -57,8 +67,29 @@ export class ProjectFilesController {
   }
 
   @Get('static/*')
+  @ApiOperation({
+    summary: 'Download project static file',
+    description: 'Downloads project static file by path specified in parameters',
+  })
+  @ApiOkResponse({
+    description: 'Download file',
+    content: {
+      'application/octet-stream': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'File not found' })
+  @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async getStaticFile(@Param('project') project: string, @Param() params: [string], @Res() response: Response) {
     const filePath = params[0];
+
+    if (filePath.includes('.')) {
+      return response.sendStatus(HttpStatus.BAD_REQUEST);
+    }
 
     const projectStaticFilePath = getProjectStaticFilePath(project)(filePath);
 
@@ -71,6 +102,20 @@ export class ProjectFilesController {
   }
 
   @Get('thumbnail/:fileId/width/:width/height/:height/:userToken') // it is insecure to store token in GET request
+  @ApiOperation({ summary: 'Download thumbnail', description: 'Downloads image thumbnail of specified size' })
+  @ApiOkResponse({
+    description: 'Download file',
+    content: {
+      'application/octet-stream': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'File not found' })
+  @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async getThumbnailWithToken(
     @Param('project') project: string,
     @Param('fileId') fileId: string,
@@ -82,6 +127,20 @@ export class ProjectFilesController {
   }
 
   @Get('thumbnail/:fileId/width/:width/height/:height')
+  @ApiOperation({ summary: 'Download thumbnail', description: 'Download image thumbnail of specified size' })
+  @ApiOkResponse({
+    description: 'Download file',
+    content: {
+      'application/octet-stream': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'File not found' })
+  @ApiUnauthorizedResponse({ description: 'Not authorized.' })
   async getThumbnail(
     @Param('project') project: string,
     @Param('fileId') fileId: string,

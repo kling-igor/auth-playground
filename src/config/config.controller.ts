@@ -23,7 +23,7 @@ import { ConfigurationService } from './config.service';
 import { UploadConfigurationRequestDto } from './dto/upload-configuration.request.dto';
 import { DownloadConfigurationResponseDto, ConfigurationSlice } from './dto/download-configuration.response.dto';
 import { DownloadConfigurationRequestDto } from './dto/download-configuration.request.dto';
-@ApiTags('Config')
+@ApiTags('Configuration')
 @Controller()
 export class ConfigurationController {
   constructor(private readonly configService: ConfigurationService) {}

@@ -38,10 +38,9 @@ async function bootstrap() {
   const options = new DocumentBuilder()
     .addBearerAuth()
     .addBasicAuth()
-    .setTitle('Auth Playground')
-    .setDescription('Nest.js based auth playground')
+    .setTitle('DBT Box')
+    .setDescription('Nest.js based DBT box API implementation')
     .setVersion(`v${APP_API_VERSION}`)
-    .addTag('API')
     .build();
 
   const document = SwaggerModule.createDocument(app, options, {
