@@ -43,8 +43,13 @@ export class DocumentRepository {
     );
   }
 
-  async find(project: string, collection: string, filter = {}, options = {}): Promise<[any]> {
+  async find(project: string, collection: string, filter = {}, projection = null, options = {}): Promise<[any]> {
     const model = await this.getModel(project, collection);
-    return await model.find(filter, null, { ...options, lean: true });
+
+    console.log('* filter:', filter);
+    console.log('* projection:', projection);
+    console.log('* options:', options);
+
+    return await model.find(filter, projection, { ...options, lean: true });
   }
 }

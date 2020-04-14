@@ -34,7 +34,8 @@ const arrayOperators = {
 
 declare type Options = Record<string, any>;
 
-const prepareFieldsFilter = (filters: [Options], wrapKeys = false): Options => {
+// it also required to replace all id to _id
+const prepareFieldsFilter = (filters: Options[], wrapKeys = false): Options => {
   let preparedFilters: Options = {};
 
   for (const filter of filters) {
@@ -46,13 +47,13 @@ const prepareFieldsFilter = (filters: [Options], wrapKeys = false): Options => {
 
     if (queryOperator) {
       const prepareFilter = {
-        [paramName]: {
+        [`content.${paramName}`]: {
           [queryOperator]: (operator === 'in' || operator === 'nin') && !Array.isArray(value) ? [value] : value,
         },
       };
 
       if (operator === 'regex') {
-        prepareFilter[paramName]['$options'] = modificators.join('');
+        prepareFilter[`content.${paramName}`]['$options'] = modificators.join('');
       }
 
       if (wrapKeys) {
@@ -63,7 +64,7 @@ const prepareFieldsFilter = (filters: [Options], wrapKeys = false): Options => {
     } else if (logicalSelector) {
       preparedFilters[logicalSelector] = prepareFieldsFilter(value, true);
     } else if (arrayOperator) {
-      preparedFilters[paramName] = {
+      preparedFilters[`content.${paramName}`] = {
         [arrayOperator]: prepareFieldsFilter(value),
       };
     } else {
@@ -74,15 +75,8 @@ const prepareFieldsFilter = (filters: [Options], wrapKeys = false): Options => {
   return preparedFilters;
 };
 
-const makeOptions = (fields?: [string], sort?: [Record<string, number>], limit?: number, offset?: number): Options => {
+const makeOptions = (sort?: Record<string, number>[], limit?: number, offset?: number): Options => {
   const options: Options = {};
-
-  if (fields) {
-    options.projection = fields.reduce<Options>((acc, field) => {
-      acc[field] = 1;
-      return acc;
-    }, {});
-  }
 
   if (sort) {
     options.sort = sort;
@@ -99,7 +93,7 @@ const makeOptions = (fields?: [string], sort?: [Record<string, number>], limit?:
   return options;
 };
 
-const isValidId = (id: string): boolean => /^[0-9a-z]{24}$/.test(id);
+// const isValidId = (id: string): boolean => /^[0-9a-z]{24}$/.test(id);
 
 // сомнительный функционал !!!!
 // const validIdExist = (array: [string]) => {
@@ -114,13 +108,14 @@ const isValidId = (id: string): boolean => /^[0-9a-z]{24}$/.test(id);
 //   }
 // };
 
-// const prepareId = (filter: Options, parentKey = '') => {
+// const prepareId = (filter: Options, parentKey = ''): Options => {
 //   const result: Options = {};
 
 //   for (const [key, value] of Object.entries(filter)) {
 //     if (key === 'id') {
 //       if (Array.isArray(value) && validIdExist(value as [string])) {
 //         prepareId(value, key);
+//         filter['_id'] = value;
 //       }
 //     } else if (parentKey === 'id' && key.startsWith('$') && value) {
 //       if (Array.isArray(value)) {
@@ -130,6 +125,8 @@ const isValidId = (id: string): boolean => /^[0-9a-z]{24}$/.test(id);
 //       prepareId(value, key); // !!!!! array or object !!
 //     }
 //   }
+
+//   return result;
 // };
 
 @Injectable()
@@ -139,7 +136,7 @@ export class DataService {
     private readonly documentRepository: DocumentRepository,
   ) {}
 
-  async save(project: string, configId: string, modelName: string, documents: [any]): Promise<any> {
+  async save(project: string, configId: string, modelName: string, documents: any[]): Promise<any> {
     // получаем схему модели
     const schema = await this.modelSchemaService.getSchema(modelName, project, configId);
 
@@ -169,14 +166,33 @@ export class DataService {
     project: string,
     configId: string,
     modelName: string,
-    filters: [Record<string, any>],
-    fields: [string],
-    sort: [Record<string, number>],
-    limit: number,
-    offset: number,
+    filters: Record<string, any>[],
+    fields?: string[],
+    sort?: Record<string, number>[],
+    limit?: number,
+    offset?: number,
   ): Promise<any> {
+    // console.log('PROJECT:', project);
+    // console.log('CONFIG:', configId);
+    // console.log('MODEL:', modelName);
+    // console.log('FILTERS:', filters);
+    // console.log('FIELDS:', fields);
+    // console.log('SORT:', sort);
+    // console.log('LIMIT:', limit);
+    // console.log('OFFSET:', offset);
+
+    const schemaKeys = ['id', 'name', 'uptime'];
+
+    const projection = fields
+      ? fields.reduce<Options>((acc, field) => {
+          const key = schemaKeys.includes(field) ? field : `content.${field}`;
+          acc[key] = 1;
+          return acc;
+        }, {})
+      : null;
+
     const preparedFilters: Options = prepareFieldsFilter(filters);
-    const options: Options = makeOptions(fields, sort, limit, offset);
+    const options: Options = makeOptions(sort, limit, offset);
 
     // получаем схему модели
     const schema = await this.modelSchemaService.getSchema(modelName, project, configId);
@@ -193,7 +209,7 @@ export class DataService {
       source: { name: collection },
     } = schema;
 
-    const found = await this.documentRepository.find(project, collection, preparedFilters, options);
+    const found = await this.documentRepository.find(project, collection, preparedFilters, projection, options);
 
     if (found) {
       return found.map(({ _id, uptime, content }) => ({ id: _id, uptime, ...content }));

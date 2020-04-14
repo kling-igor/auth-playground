@@ -25,7 +25,7 @@ export class DataController {
     @Project() project: string,
     @ConfigId() configId: string,
     @Body('name') modelName: string,
-    @Body('objects') documents: [any],
+    @Body('objects') documents: any[],
   ): Promise<[any]> {
     return this.dataService.save(project, configId, modelName, documents);
   }
@@ -40,11 +40,11 @@ export class DataController {
     @Project() project: string,
     @ConfigId() configId: string,
     @Body('name') modelName: string,
-    @Body('name') filters: [Record<string, any>],
-    @Body('name') fields: [string],
-    @Body('name') sort: [Record<string, number>],
-    @Body('name') limit: number,
-    @Body('name') offset: number,
+    @Body('filters') filters: Record<string, any>[],
+    @Body('fields') fields?: string[],
+    @Body('sort') sort?: Record<string, number>[],
+    @Body('limit') limit?: number,
+    @Body('offset') offset?: number,
   ): Promise<[any]> {
     return this.dataService.findAll(project, configId, modelName, filters, fields, sort, limit, offset);
   }
