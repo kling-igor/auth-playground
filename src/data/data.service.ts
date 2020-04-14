@@ -6,6 +6,7 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
+import ObjectID from 'bson-objectid';
 
 import { ModelSchemaService } from './model-schema.service';
 import { DocumentRepository } from './document.repository';
@@ -34,7 +35,6 @@ const arrayOperators = {
 
 declare type Options = Record<string, any>;
 
-// it also required to replace all id to _id
 const prepareFieldsFilter = (filters: Options[], wrapKeys = false): Options => {
   let preparedFilters: Options = {};
 
@@ -46,14 +46,43 @@ const prepareFieldsFilter = (filters: Options[], wrapKeys = false): Options => {
     const arrayOperator = arrayOperators[operator];
 
     if (queryOperator) {
-      const prepareFilter = {
-        [`content.${paramName}`]: {
-          [queryOperator]: (operator === 'in' || operator === 'nin') && !Array.isArray(value) ? [value] : value,
-        },
-      };
+      let key = paramName;
+      if (paramName === 'id') {
+        key = '_id';
+      } else if (paramName !== 'name' && paramName !== 'uptime') {
+        key = `content.${paramName}`;
+      }
+
+      let prepareFilter;
+
+      if (paramName === 'id') {
+        const parsedValue = Array.isArray(value)
+          ? value.map(item => ObjectID.createFromHexString(item))
+          : ObjectID.createFromHexString(value);
+
+        if (operator === 'in' || operator === 'nin') {
+          prepareFilter = {
+            [key]: {
+              [queryOperator]: Array.isArray(parsedValue) ? parsedValue : [parsedValue],
+            },
+          };
+        } else {
+          prepareFilter = {
+            [key]: {
+              [queryOperator]: parsedValue,
+            },
+          };
+        }
+      } else {
+        prepareFilter = {
+          [key]: {
+            [queryOperator]: value,
+          },
+        };
+      }
 
       if (operator === 'regex') {
-        prepareFilter[`content.${paramName}`]['$options'] = modificators.join('');
+        prepareFilter[key]['$options'] = modificators.join('');
       }
 
       if (wrapKeys) {
@@ -214,21 +243,10 @@ export class DataService {
     if (found) {
       return found.map(({ _id, uptime, content }) => ({ id: _id, uptime, ...content }));
     }
-
-    // $collection = $this->getDb()->selectCollection($name);
-
-    // заменяем в filter все id на _id
-    // self::prepareId($filter);
-
-    // /** @var BSONDocument $data */
-    // foreach ($collection->find($filter, $options) as $data) {
-    //     $conf = $data->getArrayCopy();
-    //     $conf['id'] = (string) $conf['_id'];
-    //     unset($conf['_id']);
-    //     yield $conf;
-    // }
   }
 }
+
+// PHP legacy
 
 //     /**
 //      * @param array  $filter
