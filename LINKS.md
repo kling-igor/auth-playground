@@ -20,6 +20,8 @@ https://confluence.altarix.ru/confluence/pages/viewpage.action?pageId=91261282
 
 # Core API
 
+http://dev.api-doc.blackhole.marm.altarix.org/
+
 https://confluence.altarix.ru/confluence/pages/viewpage.action?pageId=88418157
 
 # Other Links

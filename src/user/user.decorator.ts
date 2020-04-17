@@ -1,8 +1,8 @@
-import { createParamDecorator } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-/**
- * Returns user (or only specified filed from user object) from request which is places there by passport
- */
-export const CurrentUser = createParamDecorator((key: string, req) => {
-  return key ? req.user && req.user[key] : req.user;
+export const CurrentUser = createParamDecorator((data: string, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest();
+  const user = request.user;
+
+  return data ? user && user[data] : user;
 });
