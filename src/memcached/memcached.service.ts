@@ -18,7 +18,7 @@ export class MemcachedService {
     this.client = new MemcachedClient(uri, options);
   }
 
-  get raw() {
+  get memcachedClient() {
     return this.client;
   }
 
