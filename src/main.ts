@@ -6,6 +6,7 @@ import * as compression from 'compression';
 import * as helmet from 'helmet';
 import * as hpp from 'hpp';
 import * as bodyParser from 'body-parser';
+import * as requestIp from 'request-ip';
 
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
@@ -24,6 +25,7 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ extended: true }));
   // parse application/json
   app.use(bodyParser.json({ limit: '100mb' }));
+  app.use(requestIp.mw());
 
   const configService = app.get(ConfigService);
 

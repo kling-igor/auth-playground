@@ -1,17 +1,24 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import ObjectID from 'bson-objectid';
 
 import { DatabaseConnection } from '../common/db-connection';
 import { ConfigItemSchema } from '../common/item.schema';
 
+import { MemcachedService } from '../memcached';
+
 @Injectable()
 export class DocumentRepository {
+  // use memcached instead
   private models: Map<string, any> = new Map<string, any>();
 
-  constructor(private readonly databaseConnection: DatabaseConnection) {}
+  constructor(
+    private readonly databaseConnection: DatabaseConnection,
+    private readonly memcachedService: MemcachedService, // private readonly memcachedService: MemcachedService, // ,
+  ) {}
 
   private async getModel(dbName, collection): Promise<any> {
     const key = `${dbName}_${collection}`;
+
     let model = this.models.get(key);
     if (!model) {
       const connection = await this.databaseConnection.getConnection(dbName);

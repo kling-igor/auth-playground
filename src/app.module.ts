@@ -12,6 +12,8 @@ import { ConfigurationModule } from './config/config.module';
 import { ProjectFilesModule } from './project-files/project-files.module';
 import { DataModule } from './data/data.module';
 
+import { MemcachedModule } from './memcached';
+
 import { DatabaseConnection } from './common/db-connection';
 
 @Module({
@@ -32,6 +34,17 @@ import { DatabaseConnection } from './common/db-connection';
     //   }),
     //   inject: [ConfigService],
     // }),
+    MemcachedModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const MEMCACHED_URI = configService.get<string>('MEMCACHED_URI') || '';
+        return {
+          uri: MEMCACHED_URI.replace(/\s/g, '').split(','),
+          // use other memcached options here
+        };
+      },
+      inject: [ConfigService],
+    }),
     AuthModule,
     UserModule,
     FileModule,
@@ -41,5 +54,6 @@ import { DatabaseConnection } from './common/db-connection';
   ],
   // controllers: [],
   providers: [DatabaseConnection],
+  exports: [],
 })
 export class AppModule {}

@@ -7,10 +7,19 @@ import { DatabaseConnection } from '../common/db-connection';
 import { DocumentRepository } from './document.repository';
 import { ConfigRepository } from '../config/config.repository';
 
+import { MemcachedModule, MemcachedService } from '../memcached';
+
 @Module({
-  imports: [],
+  imports: [MemcachedModule],
   controllers: [DataController],
-  providers: [DatabaseConnection, ConfigRepository, ModelSchemaService, DocumentRepository, DataService],
+  providers: [
+    DatabaseConnection,
+    ConfigRepository,
+    ModelSchemaService,
+    DocumentRepository,
+    DataService,
+    MemcachedService,
+  ],
   exports: [],
 })
 export class DataModule {}
