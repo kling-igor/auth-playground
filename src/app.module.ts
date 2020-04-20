@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { ConnectionOptions } from 'typeorm';
+// import { MongooseModule } from '@nestjs/mongoose';
 
-import * as mongoose from 'mongoose';
+// import * as mongoose from 'mongoose';
 // mongoose.set('debug', true);
 
 import { UserModule } from './user/user.module';
@@ -34,6 +36,26 @@ import { DatabaseConnection } from './common/db-connection';
     //   }),
     //   inject: [ConfigService],
     // }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          type: 'postgres',
+          host: configService.get<string>('POSTGRES_HOST'),
+          port: configService.get<number>('POSTGRES_PORT'),
+          username: configService.get<string>('POSTGRES_USER'),
+          password: configService.get<string>('POSTGRES_PASSWORD'),
+          database: configService.get<string>('POSTGRESS_DB'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: true,
+          retryAttempts: 5,
+          retryDelay: 3000,
+          autoLoadEntities: true,
+          keepConnectionAlive: true,
+        } as TypeOrmModuleOptions;
+      },
+    }),
     MemcachedModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
