@@ -49,10 +49,14 @@ import { DatabaseConnection } from './common/db-connection';
           database: configService.get<string>('POSTGRESS_DB'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize: true,
-          retryAttempts: 5,
-          retryDelay: 3000,
-          autoLoadEntities: true,
-          keepConnectionAlive: true,
+          /* Number of attempts to connect to the database (default: 10) */
+          // retryAttempts: 5,
+          /* Delay between connection retry attempts (ms) (default: 3000) */
+          // retryDelay: 3000,
+          /* If true, entities will be loaded automatically (default: false) */
+          // autoLoadEntities: true,
+          /* If true, connection will not be closed on application shutdown (default: false) */
+          // keepConnectionAlive: true,
         } as TypeOrmModuleOptions;
       },
     }),

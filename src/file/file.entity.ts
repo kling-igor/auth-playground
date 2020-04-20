@@ -9,41 +9,41 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity({ name: 'users' })
-export class UserEntity {
+@Entity({ name: 'file_statistic' })
+export class File {
   // id файла в формате uuid
-  @PrimaryGeneratedColumn({ type: 'uuid', name: 'file_id' })
-  fileId: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'file_id' })
+  public fileId: string;
 
   // хэш файла по алгоритму sha1
   @Column({ type: 'varchar', length: 40, name: 'file_hash' })
-  fileHash: string;
+  public fileHash: string;
 
   // тип файла / расширение
   @Column({ type: 'varchar', length: 100, name: 'file_type' })
-  fileType: string;
+  public fileType: string;
 
   // оригинальное название файла
   @Column({ type: 'varchar', length: 255 })
-  filename: string;
+  public filename: string;
 
   // id пользователя загрузившего файл
   @Column({ type: 'uuid', name: 'user_id' })
-  userId: string;
+  public userId: string;
 
   // статус загрузки (результат)
   @Column({ type: 'varchar', length: 15, name: 'upload_status' })
-  uploadStatus: string;
+  public uploadStatus: string;
 
   // дата загрузки
-  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', name: 'upload_date' })
-  uploadDate: Date;
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: 'upload_date' })
+  public uploadDate: Date;
 
   // токен проекта
   @Column({ type: 'varchar', length: 50 })
-  project: string;
+  public project: string;
 
   // флаг, обозначающий файл статичным
   @Column({ type: 'boolean', default: true })
-  static: boolean;
+  public static: boolean;
 }

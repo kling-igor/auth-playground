@@ -7,10 +7,15 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+// import { Model } from 'mongoose';
 
-import { File } from './file.interface';
-import { FILE_MODEL } from './constants';
+import { Repository } from 'typeorm';
+
+// import { File } from './file.interface';
+import { File } from './file.entity';
+
+// import { FILE_MODEL } from './constants';
 
 import { FileInfoCreateDto } from './dto/file-info.create.dto';
 import { FileUploadResponseDto, FileUploadStatus } from './dto/file-upload.response.dto';
@@ -48,10 +53,12 @@ INFO: [ { id: '8b162eab-7329-4158-bfff-1d924f390c57',
 
 @Injectable()
 export class FileService {
-  constructor(
-    @Inject(FILE_MODEL)
-    private fileModel: Model<File>,
-  ) {}
+  // constructor(
+  //   @Inject(FILE_MODEL)
+  //   private fileModel: Model<File>,
+  // ) {}
+
+  constructor(@InjectRepository(File) private readonly fileRepository: Repository<File>) {}
 
   async download(filePath: string): Promise<any> {
     // TODO:  to be done
@@ -81,6 +88,38 @@ export class FileService {
           result[fieldname] = { id: fieldname, code: 200, message: 'File uploaded' };
           // result.push({ id: fieldname, code: 200, message: 'File uploaded' });
         } else {
+          const previouslyUploaded = await this.fileRepository.findOne({ where: { fileHash: hash } });
+          console.log('previouslyUploaded', previouslyUploaded);
+
+          // get rid of timezone
+          const uploadDate = new Date(
+            new Date()
+              .toISOString()
+              .split('.')
+              .shift(),
+          );
+
+          const newFile = this.fileRepository.create({
+            fileId: fieldname,
+            fileHash: hash,
+            fileType: mimetype,
+            filename: filename,
+            userId: '123e4567-e89b-12d3-a456-426655440000', // TODO user real user info!!!
+            uploadStatus: 'success',
+            uploadDate: uploadDate,
+            project: 'conf', // TODO: user real project
+            static: false,
+          });
+
+          if (previouslyUploaded) {
+            await this.fileRepository.update(previouslyUploaded.fileId, newFile);
+            result[fieldname] = { id: fieldname, code: 200, message: 'Duplicate' };
+          } else {
+            await this.fileRepository.save(newFile);
+            result[fieldname] = { id: fieldname, code: 200, message: 'File uploaded' };
+          }
+
+          /*          
           const previouslyUploaded = await this.fileModel.findOne({ file_hash: hash });
 
           console.log('previouslyUploaded', previouslyUploaded);
@@ -90,7 +129,7 @@ export class FileService {
             file_hash: hash,
             file_type: mimetype,
             filename: filename,
-            user_id: 'ZERO', // TODO user real user info!!!
+            user_id: '123e4567-e89b-12d3-a456-426655440000', // TODO user real user info!!!
             upload_status: 'success',
             upload_date: Date.now(),
             project: 'conf', // TODO: user real project
@@ -107,6 +146,7 @@ export class FileService {
             result[fieldname] = { id: fieldname, code: 200, message: 'File uploaded' };
             // result.push({ id: fieldname, code: 200, message: 'File uploaded' });
           }
+*/
         }
       }
     }
