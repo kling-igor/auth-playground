@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SignInUserResponseDto {
-  @ApiProperty({ description: 'user email', example: 'jd@example.com' })
-  readonly email: string;
+  @ApiProperty({ description: 'user login', example: 'jd@example.com' })
+  readonly login: string;
 
   @ApiProperty({
     description: 'JSON Web Token',
