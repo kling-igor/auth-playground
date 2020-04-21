@@ -51,9 +51,9 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Token expired' })
   @ApiOperation({ summary: 'Refresh user JWT/refreshToken by previously granted refresh token' })
   async refresh(
-    @Body('email') email: string,
+    @Body('login') login: string,
     @Body('refreshToken') refreshToken: string,
   ): Promise<SignInUserResponseDto> {
-    return this.authService.refresh(email, refreshToken);
+    return this.authService.refresh(login, refreshToken);
   }
 }

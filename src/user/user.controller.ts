@@ -42,7 +42,15 @@ export class UsersController {
   @ApiOperation({ summary: 'Get user profile' })
   async getProfile(@CurrentUser('userId') userId: string): Promise<Partial<User>> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id, password, /*refreshToken, expirationDate,*/ ...rest } = await this.userService.getUserById(userId);
+    const {
+      id,
+      password,
+      refreshToken,
+      expirationDate,
+      createdAt,
+      updatedAt,
+      ...rest
+    } = await this.userService.getUserById(userId);
     return rest;
   }
 
@@ -58,6 +66,6 @@ export class UsersController {
   async getAll(@Query('offset') offset = 0, @Query('limit') limit = 10): Promise<Partial<User>[]> {
     const users = await this.userService.allUsers(offset, limit);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return users.map(({ id, password, /*refreshToken, expirationDate,*/ ...rest }) => rest);
+    return users.map(({ id, password, refreshToken, expirationDate, createdAt, updatedAt, ...rest }) => rest);
   }
 }
