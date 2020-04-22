@@ -12,6 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "cli": "ts-node -r dotenv/config ./src/cli.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "typeorm": "ts-node -r dotenv/config ./node_modules/typeorm/cli.js",
     "typeorm:migration:create": "npm run typeorm -- migration:create -n",
