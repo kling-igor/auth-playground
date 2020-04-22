@@ -11,7 +11,7 @@ import * as argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
 
 import { UserService } from '../user/user.service';
-import { User } from '../user/user.entity';
+import { UserEntity } from '../user/user.entity';
 import { SignInUserRequestDto, SignUpUserRequestDto, SignInUserResponseDto } from './dto';
 
 const REFRESH_EXPIRES_IN_DAYS = parseInt(process.env.REFRESH_EXPIRES_IN_DAYS || '');
@@ -33,7 +33,7 @@ export class AuthService {
   constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
 
   async signUp(signUpUserDto: SignUpUserRequestDto): Promise<SignInUserResponseDto> {
-    const found: User = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
+    const found: UserEntity = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
 
     if (found) {
       throw new ConflictException(`User with login <${signUpUserDto.login}> already exists`);
@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   async signIn(signInUserDto: SignInUserRequestDto): Promise<SignInUserResponseDto> {
-    const user: User = await this.userService.getUserByLogin(signInUserDto.login.toLowerCase());
+    const user: UserEntity = await this.userService.getUserByLogin(signInUserDto.login.toLowerCase());
 
     if (!user) {
       throw new NotFoundException('Wrong login or password.');
@@ -97,7 +97,7 @@ export class AuthService {
   }
 
   async refresh(login: string, refreshToken: string): Promise<SignInUserResponseDto> {
-    const user: User = await this.userService.getUserByLogin(login);
+    const user: UserEntity = await this.userService.getUserByLogin(login);
     if (!user) {
       throw new NotFoundException(`Invalid refresh token (user with login '${login}' not found)`);
     }

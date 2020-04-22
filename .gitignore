@@ -24,3 +24,6 @@ lerna-debug.log*
 *.png
 *.jpg
 *.jpeg
+
+
+SECRETS.md

@@ -3,6 +3,7 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinTable,
   JoinColumn,
   ManyToMany,
   OneToMany,
@@ -10,8 +11,10 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { RoleEntity } from './role.entity';
+
 @Entity({ name: 'users' })
-export class User {
+export class UserEntity {
   // id файла в формате uuid
   @PrimaryGeneratedColumn('uuid')
   public id: string;
@@ -42,4 +45,11 @@ export class User {
 
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: 'updated_at' })
   public updatedAt: Date;
+
+  @ManyToMany(
+    type => RoleEntity,
+    roleEntity => roleEntity.users,
+    { eager: true /*cascade: true*/ },
+  )
+  public roles: RoleEntity[];
 }
