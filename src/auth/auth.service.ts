@@ -71,7 +71,7 @@ export class AuthService {
       throw new NotFoundException('Wrong login or password.');
     }
 
-    const { id: userId, login /*roles = []*/ } = user;
+    const { id: userId, login, roles = [] } = user;
 
     // creating a new refresh token
     const refreshToken = makeRefreshToken();
@@ -87,7 +87,7 @@ export class AuthService {
       throw new BadRequestException('Unable to issue new refresh token');
     }
 
-    const jwtPayload = { userId, roles: [] };
+    const jwtPayload = { userId, roles: roles.map(({ code }) => code) };
 
     return {
       login,
@@ -108,7 +108,7 @@ export class AuthService {
       throw new BadRequestException('Invalid refresh token');
     }
 
-    const { id: userId /*roles = [] */ } = user;
+    const { id: userId, roles = [] } = user;
 
     // if the first date is after the second
     if (compareAsc(Date.now(), user.expirationDate) >= 0) {
@@ -129,7 +129,7 @@ export class AuthService {
       throw new BadRequestException('Unable to issue new refresh token');
     }
 
-    const jwtPayload = { userId, roles: [] };
+    const jwtPayload = { userId, roles: roles.map(({ code }) => code) };
 
     return {
       login,
