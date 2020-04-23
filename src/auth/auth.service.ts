@@ -71,29 +71,7 @@ export class AuthService {
       throw new NotFoundException('Wrong login or password.');
     }
 
-    const { id: userId, login, roles = [] } = user;
-
-    // creating a new refresh token
-    const refreshToken = makeRefreshToken();
-    const tokenHash = await hash(refreshToken);
-
-    const updated = await this.userService.updateUser({
-      id: user.id,
-      refreshToken: tokenHash,
-      expirationDate: expirationDate(),
-    });
-
-    if (!updated) {
-      throw new BadRequestException('Unable to issue new refresh token');
-    }
-
-    const jwtPayload = { userId, roles: roles.map(({ code }) => code) };
-
-    return {
-      login,
-      jwt: this.jwtService.sign(jwtPayload),
-      refreshToken,
-    };
+    return await this.issueNewToken(user);
   }
 
   async refresh(login: string, refreshToken: string): Promise<SignInUserResponseDto> {
@@ -108,19 +86,23 @@ export class AuthService {
       throw new BadRequestException('Invalid refresh token');
     }
 
-    const { id: userId, roles = [] } = user;
-
     // if the first date is after the second
     if (compareAsc(Date.now(), user.expirationDate) >= 0) {
       throw new UnauthorizedException('Invalid refresh token (token expired)');
     }
+
+    return await this.issueNewToken(user);
+  }
+
+  async issueNewToken(user: UserEntity): Promise<SignInUserResponseDto> {
+    const { id: userId, login, roles = [] } = user;
 
     // creating a new refresh token
     const newRefreshToken = makeRefreshToken();
     const tokenHash = await hash(newRefreshToken);
 
     const updated = await this.userService.updateUser({
-      id: userId,
+      id: user.id,
       refreshToken: tokenHash,
       expirationDate: expirationDate(),
     });

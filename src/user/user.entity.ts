@@ -13,6 +13,8 @@ import {
 
 import { RoleEntity } from './role.entity';
 
+import { SocialNetworkEntity } from './social.entity';
+
 @Entity({ name: 'users' })
 export class UserEntity {
   // id файла в формате uuid
@@ -47,9 +49,16 @@ export class UserEntity {
   public updatedAt: Date;
 
   @ManyToMany(
-    type => RoleEntity,
+    () => RoleEntity,
     roleEntity => roleEntity.users,
-    { eager: true /*cascade: true*/ },
+    { eager: true /*, cascade: true */ },
   )
   public roles: RoleEntity[];
+
+  @OneToMany(
+    () => SocialNetworkEntity,
+    socialNetworkEntity => socialNetworkEntity.user,
+    { eager: true /*, cascade: true */ },
+  )
+  public socialAccounts: SocialNetworkEntity[];
 }

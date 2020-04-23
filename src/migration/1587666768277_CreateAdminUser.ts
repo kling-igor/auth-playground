@@ -13,8 +13,8 @@ const timestamp = (date: Date = new Date()) =>
       .shift(),
   );
 
-export class CreateAdminUser1587537050168 implements MigrationInterface {
-  name = 'CreateAdminUser1587537050168';
+export class CreateAdminUser1587666768277 implements MigrationInterface {
+  name = 'CreateAdminUser1587666768277';
 
   public async up(queryRunner: QueryRunner): Promise<any> {
     const user = new UserEntity();

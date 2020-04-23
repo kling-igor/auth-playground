@@ -7,7 +7,7 @@ export class RoleEntity {
   public code: string;
 
   @ManyToMany(
-    type => UserEntity,
+    () => UserEntity,
     userEntity => userEntity.roles,
   )
   @JoinTable({

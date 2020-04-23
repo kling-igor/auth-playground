@@ -17,6 +17,7 @@
     "typeorm": "ts-node -r dotenv/config ./node_modules/typeorm/cli.js",
     "typeorm:migration:create": "npm run typeorm -- migration:create -n",
     "typeorm:migration:generate": "npm run typeorm -- migration:generate -n",
+    "typeorm:migration:revert": "npm run typeorm -- migration:revert",
     "typeorm:migration:run": "npm run typeorm -- migration:run"
   },
   "dependencies": {
@@ -38,6 +39,7 @@
     "fs-extra": "^9.0.0",
     "helmet": "^3.22.0",
     "hpp": "^0.2.3",
+    "jsonwebtoken": "^8.5.1",
     "memcached": "^2.2.2",
     "mongoose": "^5.9.6",
     "passport": "^0.4.1",

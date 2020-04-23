@@ -1,8 +1,8 @@
 import { MigrationInterface, QueryRunner, getRepository } from 'typeorm';
 import { RoleEntity } from '../user/role.entity';
 
-export class CreateRoles1587537050068 implements MigrationInterface {
-  name = 'CreateRoles1587537050068';
+export class CreateRoles1587666768177 implements MigrationInterface {
+  name = 'CreateRoles1587666768177';
 
   public async up(queryRunner: QueryRunner): Promise<any> {
     const admin = new RoleEntity();
