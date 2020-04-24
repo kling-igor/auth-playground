@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { UserService } from '../user/user.service';
 import { UserEntity } from '../user/user.entity';
-import { SignInUserRequestDto, SignUpUserRequestDto, SignInUserResponseDto } from './dto';
+import { SignInUserRequestDto, SignUpUserRequestDto, SignInUserResponseDto, SignUpSocialUserRequestDto } from './dto';
 
 const REFRESH_EXPIRES_IN_DAYS = parseInt(process.env.REFRESH_EXPIRES_IN_DAYS || '');
 
@@ -42,20 +42,35 @@ export class AuthService {
     const refreshToken = makeRefreshToken();
     const tokenHash = await hash(refreshToken);
 
-    const { login, id: userId /*roles = []*/ } = await this.userService.createUser({
+    const createdUser = await this.userService.createUser({
       ...signUpUserDto,
       refreshToken: tokenHash,
       expirationDate: expirationDate(),
     });
 
-    // @see user.decorator.ts
-    const jwtPayload = { userId, roles: [] };
+    return await this.issueNewToken(createdUser);
+  }
 
-    return {
-      login,
-      jwt: this.jwtService.sign(jwtPayload),
-      refreshToken,
-    };
+  async signUpWithSocial(signUpUserDto: SignUpSocialUserRequestDto): Promise<SignInUserResponseDto> {
+    const found: UserEntity = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
+
+    if (found) {
+      throw new ConflictException(`User with login <${signUpUserDto.login}> already exists`);
+    }
+
+    const refreshToken = makeRefreshToken();
+    const tokenHash = await hash(refreshToken);
+
+    const createdUser = await this.userService.createUser({
+      ...signUpUserDto,
+      password: '', // TODO - check if impossible to signin with empty password
+      refreshToken: tokenHash,
+      expirationDate: expirationDate(),
+    });
+
+    await this.userService.linkWithSocialAccount(createdUser, signUpUserDto.socialNetwork, signUpUserDto.socialId);
+
+    return await this.issueNewToken(createdUser);
   }
 
   async signIn(signInUserDto: SignInUserRequestDto): Promise<SignInUserResponseDto> {

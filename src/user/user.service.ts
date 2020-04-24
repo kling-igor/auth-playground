@@ -4,11 +4,15 @@ import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 
 import { UserEntity } from './user.entity';
+import { SocialNetworkEntity } from './social.entity';
 import { CreateUserDto } from './dto';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>) {}
+  constructor(
+    @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(SocialNetworkEntity) private readonly socialRepository: Repository<SocialNetworkEntity>,
+  ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     const login = createUserDto.login.toLowerCase();
@@ -79,5 +83,17 @@ export class UserService {
       .andWhere('social_networks.socialId = :socialId', { socialId })
       .cache(true)
       .getOne();
+  }
+
+  async linkWithSocialAccount(user: UserEntity, socialNetwork: string, socialId: string) {
+    const socialAccount = new SocialNetworkEntity();
+    socialAccount.socialName = socialNetwork;
+    socialAccount.socialId = socialId;
+    socialAccount.user = user;
+
+    await this.socialRepository.save(socialAccount);
+
+    user.socialAccounts = [...user.socialAccounts, socialAccount];
+    await this.userRepository.save(user);
   }
 }

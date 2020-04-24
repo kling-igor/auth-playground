@@ -21,6 +21,12 @@ import { GoogleService } from './google.service';
 export class GoogleController {
   constructor(private readonly googleService: GoogleService) {}
 
+  @Post('google/signup')
+  async signUp(@Body('tokenId') tokenId: string): Promise<SignInUserResponseDto> {
+    const result = await this.googleService.signUp(tokenId);
+    return plainToClass(SignInUserResponseDto, result);
+  }
+
   @Post('google/signin')
   async signIn(@Body('tokenId') tokenId: string): Promise<SignInUserResponseDto> {
     const result = await this.googleService.signIn(tokenId);
