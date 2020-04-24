@@ -70,4 +70,14 @@ export class UserService {
   async allUsers(offset = 0, limit = 10): Promise<UserEntity[]> {
     return await this.userRepository.find();
   }
+
+  async getUserBySocialAccount(socialName: string, socialId: string): Promise<UserEntity> {
+    return await this.userRepository
+      .createQueryBuilder('users')
+      .innerJoinAndSelect('users.socialAccounts', 'social_networks')
+      .where('social_networks.socialName = :socialName', { socialName })
+      .andWhere('social_networks.socialId = :socialId', { socialId })
+      .cache(true)
+      .getOne();
+  }
 }

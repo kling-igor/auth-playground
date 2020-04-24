@@ -5,21 +5,37 @@ import { AppModule } from './app.module';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { UserEntity } from './user/user.entity';
+import { SocialNetworkEntity } from './user/social.entity';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const connection = getConnection();
+
   const userRepository = connection.getRepository(UserEntity);
-  const users = await userRepository
+  const user = await userRepository
     .createQueryBuilder('users')
-    .select()
-    .leftJoinAndSelect('users.roles', 'roles')
-    .getMany();
+    .innerJoinAndSelect('users.socialAccounts', 'social_networks')
+    .where('social_networks.socialName = :socialName', { socialName: 'google' })
+    .andWhere('social_networks.socialId = :socialId', { socialId: '113872996235412047856' })
+    .cache(true)
+    .getOne();
 
-  // const users = await userRepository.find({ relations: ['roles'] });
+  console.log('USER:', user);
 
-  console.table(users, ['id', 'firstName', 'lastName', 'roles']);
+  // const account = await socialRepository.findOne({
+  //   where: { socialName: 'google', socialId: '113872996235412047856' },
+  // });
+
+  // const users = await userRepository
+  //   .createQueryBuilder('users')
+  //   .select()
+  //   .leftJoinAndSelect('users.roles', 'roles')
+  //   .getMany();
+
+  // // const users = await userRepository.find({ relations: ['roles'] });
+
+  // console.table(users, ['id', 'firstName', 'lastName', 'roles']);
 
   // const userService = app.select(UserModule).get(UserService, { strict: true });
 
