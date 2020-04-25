@@ -12,19 +12,12 @@ import axios, { AxiosResponse } from 'axios';
 import { AuthService } from '../auth/auth.service';
 import { UserService } from '../user/user.service';
 import { SignInUserResponseDto } from '../auth/dto';
-import { MemcachedService } from '../memcached/memcached.service';
-
-// const GOOGLE_AUTH_CLIENT_ID = '582340154298';
 
 const NETWORK_NAME = 'facebook';
 
 @Injectable()
 export class FacebookService {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
-    private readonly memcachedService: MemcachedService,
-  ) {}
+  constructor(private readonly authService: AuthService, private readonly userService: UserService) {}
 
   async getProfile(accessToken: string): Promise<any> {
     const appId = process.env.FACEBOOK_APP_ID;
@@ -33,7 +26,7 @@ export class FacebookService {
 
     try {
       const response: AxiosResponse = await axios.get(
-        `https://graph.facebook.com/me?fields=${fields}&client_id=${appId}&client_secret=${appSecret}access_token=${appId}|${appSecret}`,
+        `https://graph.facebook.com/me?fields=${fields}&client_id=${appId}&client_secret=${appSecret}`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
 
