@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { GoogleService } from './google.service';
-import { GoogleController } from './google.controller';
+import { FacebookService } from './facebook.service';
+import { FacebookController } from './facebook.controller';
 import { AuthModule } from '../auth/auth.module';
 import { UserModule } from '../user/user.module';
 import { MemcachedModule } from '../memcached/memcached.module';
 
 @Module({
   imports: [AuthModule, UserModule, MemcachedModule],
-  providers: [GoogleService],
-  controllers: [GoogleController],
+  providers: [FacebookService],
+  controllers: [FacebookController],
 })
-export class GoogleModule {}
+export class FacebookModule {}

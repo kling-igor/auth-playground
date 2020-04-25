@@ -33,44 +33,52 @@ export class AuthService {
   constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
 
   async signUp(signUpUserDto: SignUpUserRequestDto): Promise<SignInUserResponseDto> {
-    const found: UserEntity = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
+    let user: UserEntity = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
 
-    if (found) {
+    if (user) {
       throw new ConflictException(`User with login <${signUpUserDto.login}> already exists`);
     }
 
     const refreshToken = makeRefreshToken();
     const tokenHash = await hash(refreshToken);
 
-    const createdUser = await this.userService.createUser({
+    user = await this.userService.createUser({
       ...signUpUserDto,
       refreshToken: tokenHash,
       expirationDate: expirationDate(),
     });
 
-    return await this.issueNewToken(createdUser);
+    return await this.issueNewToken(user);
   }
 
   async signUpWithSocial(signUpUserDto: SignUpSocialUserRequestDto): Promise<SignInUserResponseDto> {
-    const found: UserEntity = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
-
-    if (found) {
-      throw new ConflictException(`User with login <${signUpUserDto.login}> already exists`);
+    let user = await this.userService.getUserBySocialAccount(signUpUserDto.socialNetwork, signUpUserDto.socialId);
+    if (user) {
+      throw new ConflictException(
+        `User with ${signUpUserDto.socialNetwork} account ${signUpUserDto.socialId} already exists`,
+      );
     }
+
+    user = await this.userService.getUserByLogin(signUpUserDto.login);
 
     const refreshToken = makeRefreshToken();
     const tokenHash = await hash(refreshToken);
 
-    const createdUser = await this.userService.createUser({
-      ...signUpUserDto,
-      password: '', // TODO - check if impossible to signin with empty password
-      refreshToken: tokenHash,
-      expirationDate: expirationDate(),
-    });
+    if (!user) {
+      user = await this.userService.createUser({
+        firstName: signUpUserDto.firstName || '',
+        middleName: '',
+        lastName: signUpUserDto.lastName || '',
+        login: signUpUserDto.login,
+        password: '',
+        refreshToken: tokenHash,
+        expirationDate: expirationDate(),
+      });
+    }
 
-    await this.userService.linkWithSocialAccount(createdUser, signUpUserDto.socialNetwork, signUpUserDto.socialId);
+    this.userService.linkWithSocialAccount(user, signUpUserDto.socialNetwork, signUpUserDto.socialId);
 
-    return await this.issueNewToken(createdUser);
+    return await this.issueNewToken(user);
   }
 
   async signIn(signInUserDto: SignInUserRequestDto): Promise<SignInUserResponseDto> {

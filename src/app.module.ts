@@ -1,4 +1,4 @@
-import { Module, HttpModule, HttpService } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConnectionOptions } from 'typeorm';
@@ -18,6 +18,7 @@ import { MemcachedModule } from './memcached';
 
 import { DatabaseConnection } from './common/db-connection';
 import { GoogleModule } from './google/google.module';
+import { FacebookModule } from './facebook/facebook.module';
 
 @Module({
   imports: [
@@ -72,10 +73,6 @@ import { GoogleModule } from './google/google.module';
       },
       inject: [ConfigService],
     }),
-    HttpModule.register({
-      timeout: 5000,
-      maxRedirects: 5,
-    }),
     AuthModule,
     UserModule,
     FileModule,
@@ -83,6 +80,7 @@ import { GoogleModule } from './google/google.module';
     ProjectFilesModule,
     DataModule,
     GoogleModule,
+    FacebookModule,
   ],
   // controllers: [],
   providers: [DatabaseConnection],
