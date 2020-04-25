@@ -17,7 +17,6 @@ export class DataController {
 
   // @UseGuards(JwtAuthGuard)
   @Post('save')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Save documents', description: 'Save documents to specified project database' })
   @ApiOkResponse({ description: 'Document saved.' })
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })
@@ -32,7 +31,6 @@ export class DataController {
 
   // @UseGuards(JwtAuthGuard)
   @Post('findall')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Fetch documents', description: 'Fetch documents' })
   @ApiOkResponse({ description: 'Document collection.' })
   @ApiUnauthorizedResponse({ description: 'Not authorized.' })

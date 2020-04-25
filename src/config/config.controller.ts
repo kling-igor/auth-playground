@@ -36,7 +36,6 @@ export class ConfigurationController {
   @ApiOperation({ summary: 'Upload configuration to specified database' })
   @ApiOkResponse({ description: 'Upload configuration successfully' })
   @ApiBody({ type: UploadConfigurationRequestDto })
-  @HttpCode(HttpStatus.OK)
   async upload(
     @Project() project: string,
     @ConfigId() configId: string,
@@ -52,7 +51,6 @@ export class ConfigurationController {
   @ApiOkResponse({ description: 'Download configuration successfully' })
   @ApiNotFoundResponse({ description: 'Missing proper header values to access configuration database' })
   @ApiBody({ type: DownloadConfigurationRequestDto })
-  @HttpCode(HttpStatus.OK)
   async sync(
     @Project() project: string,
     @ConfigId() configId: string,

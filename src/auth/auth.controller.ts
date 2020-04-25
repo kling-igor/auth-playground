@@ -27,24 +27,22 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Missing credentials' })
   @ApiConflictResponse({ description: 'User already exists' })
   @ApiBody({ type: SignUpUserRequestDto })
-  @ApiOperation({ summary: 'Creating a new user account' })
+  @ApiOperation({ summary: 'Create a new user account' })
   async signUp(@Body() signUpUserDto: SignUpUserRequestDto): Promise<SignInUserResponseDto> {
     return this.authService.signUp(signUpUserDto);
   }
 
   @Post('signin')
-  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Signed in successfully', type: SignInUserResponseDto })
   @ApiBadRequestResponse({ description: 'Missing credentials' })
   @ApiNotFoundResponse({ description: 'Invalid credentials' })
   @ApiBody({ type: SignInUserRequestDto })
-  @ApiOperation({ summary: 'Signing in user by email:password credentials' })
+  @ApiOperation({ summary: 'Sign in user by email:password credentials' })
   async signIn(@Body() signInUserDto: SignInUserRequestDto): Promise<SignInUserResponseDto> {
     return this.authService.signIn(signInUserDto);
   }
 
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Refreshed successfully', type: SignInUserResponseDto })
   @ApiBadRequestResponse({ description: 'Missing email or refreshToken' })
   @ApiNotFoundResponse({ description: 'Invalid email' })

@@ -45,7 +45,6 @@ export class FileController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Post('put')
-  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Upload files', description: 'Uploads files' })
   @ApiOkResponse({ type: [FileUploadResponseDto] })

@@ -41,7 +41,7 @@ async function bootstrap() {
     .addBearerAuth()
     .addBasicAuth()
     .setTitle('DBT Box')
-    .setDescription('Nest.js based DBT box API implementation')
+    .setDescription('DBT projects box API implementation')
     .setVersion(`v${APP_API_VERSION}`)
     .build();
 
