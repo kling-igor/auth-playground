@@ -2,6 +2,8 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as compression from 'compression';
 import * as helmet from 'helmet';
 import * as hpp from 'hpp';
@@ -12,8 +14,15 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
+  const keyFile = fs.readFileSync(path.resolve(__dirname, 'localhost-key.pem'));
+  const certFile = fs.readFileSync(path.resolve(__dirname, 'localhost.pem'));
+
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
+    httpsOptions: {
+      key: keyFile,
+      cert: certFile,
+    },
   });
 
   app.use(helmet());

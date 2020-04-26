@@ -1,11 +1,4 @@
-import {
-  Injectable,
-  HttpService,
-  BadRequestException,
-  NotFoundException,
-  InternalServerErrorException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 
 import axios, { AxiosResponse } from 'axios';
 
@@ -14,6 +7,20 @@ import { UserService } from '../user/user.service';
 import { SignInUserResponseDto } from '../auth/dto';
 
 const NETWORK_NAME = 'facebook';
+
+export class MissingEmailError extends Error {
+  firstName;
+  lastName;
+
+  constructor(firstName, lastName) {
+    super('Missing email');
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, MissingEmailError);
+
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+}
 
 @Injectable()
 export class FacebookService {
@@ -55,17 +62,13 @@ export class FacebookService {
       throw new ConflictException(`User with Facebook account ${id} already exists`);
     }
 
-    // // если нет, то редирект (нужно выбросит исключение? - как и где перехватить?)
-
-    const authenticatedUser = await this.authService.signUpWithSocial({
+    return await this.authService.signUpWithSocial({
       login: email,
       firstName,
       lastName,
       socialNetwork: NETWORK_NAME,
       socialId: id,
     });
-
-    return authenticatedUser;
   }
 
   async signIn(accessToken: string): Promise<SignInUserResponseDto> {
@@ -77,12 +80,22 @@ export class FacebookService {
       throw new BadRequestException('Invalid Facebook access token');
     }
 
-    const { id } = profile;
+    const { id, email, first_name: firstName, last_name: lastName, middle_name: middleName } = profile;
 
     const user = await this.userService.getUserBySocialAccount(NETWORK_NAME, id);
 
     if (!user) {
-      throw new NotFoundException(`No user with Facebook account ${id} found`);
+      if (!email) {
+        throw new MissingEmailError(firstName, firstName);
+      }
+
+      return await this.authService.signUpWithSocial({
+        login: email,
+        firstName,
+        lastName,
+        socialNetwork: NETWORK_NAME,
+        socialId: id,
+      });
     }
 
     return await this.authService.issueNewToken(user);

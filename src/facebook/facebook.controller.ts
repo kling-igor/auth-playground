@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Res,
   Query,
   UseGuards,
   HttpCode,
@@ -11,6 +12,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
+import { Response } from 'express';
 import {
   ApiTags,
   ApiBody,
@@ -24,7 +26,7 @@ import {
 } from '@nestjs/swagger';
 
 import { SignInUserResponseDto } from '../auth/dto/signin-user.response.dto';
-import { FacebookService } from './facebook.service';
+import { FacebookService, MissingEmailError } from './facebook.service';
 
 @ApiTags('Auth')
 @Controller('social')
@@ -37,9 +39,28 @@ export class FacebookController {
   @ApiBadRequestResponse({ description: 'Invalid Facebook access token' })
   @ApiConflictResponse({ description: 'User already exists' })
   @ApiOperation({ summary: 'Create a new user account based on Facebook access token' })
-  async signUp(@Body('accessToken') accessToken: string): Promise<SignInUserResponseDto> {
-    const result = await this.facebookService.signUp(accessToken);
-    return plainToClass(SignInUserResponseDto, result);
+  async signUp(@Body('accessToken') accessToken: string, @Res() res: Response) /*: Promise<SignInUserResponseDto>*/ {
+    // const result = await this.facebookService.signUp(accessToken);
+    // return plainToClass(SignInUserResponseDto, result);
+
+    try {
+      const result = await this.facebookService.signUp(accessToken);
+      return plainToClass(SignInUserResponseDto, result);
+    } catch (e) {
+      if (e instanceof MissingEmailError) {
+        return res.status(313).send({
+          firstName: e.firstName,
+          lastName: e.lastName,
+        });
+      }
+
+      throw e;
+    }
+
+    // // res.redirect(303, 'https://localhost:7777/api/v1/social/facebook/sss');
+    // res.status(313).json({
+    //   foo: 42,
+    // });
   }
 
   @Post('facebook/signin')
