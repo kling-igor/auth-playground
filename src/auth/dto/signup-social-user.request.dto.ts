@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class SignUpSocialUserRequestDto {
   @ApiProperty({ description: 'user login', example: 'jd@example.com' })
   @IsNotEmpty()
+  @IsString()
   @MaxLength(255)
   readonly login: string;
 

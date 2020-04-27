@@ -6,21 +6,9 @@ import { AuthService } from '../auth/auth.service';
 import { UserService } from '../user/user.service';
 import { SignInUserResponseDto } from '../auth/dto';
 
+import { UserData, MissingEmailError } from '../common/social';
+
 const NETWORK_NAME = 'facebook';
-
-export class MissingEmailError extends Error {
-  firstName;
-  lastName;
-
-  constructor(firstName, lastName) {
-    super('Missing email');
-    this.name = this.constructor.name;
-    Error.captureStackTrace(this, MissingEmailError);
-
-    this.firstName = firstName;
-    this.lastName = lastName;
-  }
-}
 
 @Injectable()
 export class FacebookService {
@@ -45,7 +33,7 @@ export class FacebookService {
     }
   }
 
-  async signUp(accessToken: string): Promise<SignInUserResponseDto> {
+  async signUp(accessToken: string, userData: UserData): Promise<SignInUserResponseDto> {
     let profile;
 
     try {
@@ -63,9 +51,11 @@ export class FacebookService {
     }
 
     return await this.authService.signUpWithSocial({
-      login: email,
-      firstName,
-      lastName,
+      login: email || userData.login,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      firstName: firstName || userData.first_name,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      lastName: lastName || userData.last_name,
       socialNetwork: NETWORK_NAME,
       socialId: id,
     });
@@ -86,7 +76,8 @@ export class FacebookService {
 
     if (!user) {
       if (!email) {
-        throw new MissingEmailError(firstName, firstName);
+        // unable to create account without email
+        throw new MissingEmailError(firstName, lastName);
       }
 
       return await this.authService.signUpWithSocial({
@@ -99,5 +90,18 @@ export class FacebookService {
     }
 
     return await this.authService.issueNewToken(user);
+  }
+
+  async linkAccountToUser(accessToken: string, userId: string) {
+    // find user and social accounts
+    // if user does not exist - 404
+    // if social account exists - 409
+    // link otherwise
+  }
+
+  async unlinkAccountFromUser(userId: string) {
+    // find user and social accounts
+    // if not found - 404
+    // remove social account otherwise
   }
 }

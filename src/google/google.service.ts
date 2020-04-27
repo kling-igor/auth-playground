@@ -9,13 +9,14 @@ import {
 
 import * as jwt from 'jsonwebtoken';
 import { differenceInSeconds } from 'date-fns';
+import axios, { AxiosResponse } from 'axios';
 
 import { AuthService } from '../auth/auth.service';
 import { UserService } from '../user/user.service';
 import { SignInUserResponseDto } from '../auth/dto';
 import { MemcachedService } from '../memcached/memcached.service';
 
-import axios, { AxiosResponse } from 'axios';
+import { UserData, MissingEmailError } from '../common/social';
 
 const NETWORK_NAME = 'google';
 
@@ -66,7 +67,7 @@ export class GoogleService {
     }
   }
 
-  async signUp(userToken: string): Promise<SignInUserResponseDto> {
+  async signUp(userToken: string, userData: UserData): Promise<SignInUserResponseDto> {
     const {
       sub,
       aud,
@@ -99,19 +100,27 @@ export class GoogleService {
 
     // если нет, то редирект (нужно выбросит исключение? - как и где перехватить?)
 
-    const authenticatedUser = await this.authService.signUpWithSocial({
-      login: email,
-      firstName,
-      lastName,
+    return await this.authService.signUpWithSocial({
+      login: email || userData.login,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      firstName: firstName || userData.first_name,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      lastName: lastName || userData.last_name,
       socialNetwork: NETWORK_NAME,
       socialId: sub,
     });
-
-    return authenticatedUser;
   }
 
   async signIn(userToken: string): Promise<SignInUserResponseDto> {
-    const { sub, aud, iss } = await this.decodeToken(userToken);
+    const {
+      sub,
+      aud,
+      iss,
+      email,
+      email_verified,
+      given_name: firstName,
+      family_name: lastName,
+    } = await this.decodeToken(userToken);
 
     if (!iss.includes('accounts.google.com')) {
       throw new BadRequestException(`Invalid Google token (invalid issuer)`);
@@ -128,9 +137,28 @@ export class GoogleService {
     const user = await this.userService.getUserBySocialAccount(NETWORK_NAME, sub);
 
     if (!user) {
-      throw new NotFoundException(`No user with Google account ${sub} found`);
+      if (!email) {
+        // unable to create account without email
+        throw new MissingEmailError(firstName, lastName);
+      }
+
+      // check for google profile data to create user account
+      // throw new NotFoundException(`No user with Google account ${sub} found`);
     }
 
     return await this.authService.issueNewToken(user);
+  }
+
+  async linkAccountToUser(userToken: string, userId: string) {
+    // find user and social accounts
+    // if user does not exist - 404
+    // if social account exists - 409
+    // link otherwise
+  }
+
+  async unlinkAccountFromUser(userId: string) {
+    // find user and social accounts
+    // if not found - 404
+    // remove social account otherwise
   }
 }
