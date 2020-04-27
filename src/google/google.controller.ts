@@ -17,6 +17,7 @@ import {
   ApiTags,
   ApiBody,
   ApiOperation,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
@@ -83,6 +84,8 @@ export class GoogleController {
   @UseGuards(JwtAuthGuard)
   @Post('link/google')
   @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Link Google social account to existent user account' })
   async link(@Body('tokenId') tokenId: string, @CurrentUser('userId') userId: string) {
     await this.googleService.linkAccountToUser(tokenId, userId);
   }
@@ -90,6 +93,8 @@ export class GoogleController {
   @UseGuards(JwtAuthGuard)
   @Delete('unlink/google')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Unlink Google social account from user account' })
   async unlink(@CurrentUser('userId') userId: string): Promise<void> {
     await this.googleService.unlinkAccountFromUser(userId);
   }

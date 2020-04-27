@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 
 import { plainToClass } from 'class-transformer';
 
@@ -27,12 +27,20 @@ import { DownloadConfigurationRequestDto } from './dto/download-configuration.re
 import { Project } from '../common/project.decorator';
 import { ConfigId } from '../common/config-id.decorator';
 
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+
 @ApiTags('Configuration')
 @Controller()
 export class ConfigurationController {
   constructor(private readonly configService: ConfigurationService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('mantainer')
   @Post('upload')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Upload configuration to specified database' })
   @ApiOkResponse({ description: 'Upload configuration successfully' })
   @ApiBody({ type: UploadConfigurationRequestDto })

@@ -17,6 +17,7 @@ import {
   ApiTags,
   ApiBody,
   ApiOperation,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
@@ -80,6 +81,8 @@ export class FacebookController {
   @UseGuards(JwtAuthGuard)
   @Post('link/facebook')
   @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Link Facebook social account to existent user account' })
   async link(@Body('accessToken') accessToken: string, @CurrentUser('userId') userId: string) {
     await this.facebookService.linkAccountToUser(accessToken, userId);
   }
@@ -87,6 +90,8 @@ export class FacebookController {
   @UseGuards(JwtAuthGuard)
   @Delete('unlink/facebook')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Unlink Facebook social account from user account' })
   async unlink(@CurrentUser('userId') userId: string): Promise<void> {
     await this.facebookService.unlinkAccountFromUser(userId);
   }
