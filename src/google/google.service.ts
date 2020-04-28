@@ -54,6 +54,21 @@ export class GoogleService {
   }
 
   private async decodeToken(userToken: string): Promise<any> {
+    // console.log(Buffer.from('Hello World!').toString('base64'));
+    // console.log(Buffer.from(b64Encoded, 'base64').toString());
+
+    const base64Url = userToken.split('.')[0];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jwtHeader = decodeURIComponent(
+      Buffer.from(base64, 'base64')
+        .toString()
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(''),
+    );
+
+    console.log('jwtHeader:', jwtHeader);
+
     const cert = await this.getCert();
 
     try {
