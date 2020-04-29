@@ -20,19 +20,21 @@ export class UserData {
   readonly middle_name?: string;
 }
 
-export class MissingEmailError extends Error {
+export class InsufficientCredentialsError extends Error {
+  email;
   firstName;
   lastName;
 
-  constructor(firstName, lastName) {
-    super('Missing email');
+  constructor(firstName = '', lastName = '', email = '') {
+    super('Missing credentials');
     this.name = this.constructor.name;
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingEmailError);
+      Error.captureStackTrace(this, InsufficientCredentialsError);
     } else {
-      this.stack = new Error('Missing email').stack;
+      this.stack = new Error('Missing credentials').stack;
     }
 
+    this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
   }

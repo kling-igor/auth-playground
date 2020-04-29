@@ -6,7 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { UserService } from '../user/user.service';
 import { SignInUserResponseDto } from '../auth/dto';
 
-import { UserData, MissingEmailError } from '../common/social';
+import { UserData, InsufficientCredentialsError } from '../common/social';
 
 const NETWORK_NAME = 'facebook';
 
@@ -77,7 +77,7 @@ export class FacebookService {
     if (!user) {
       if (!email) {
         // unable to create account without email
-        throw new MissingEmailError(firstName, lastName);
+        throw new InsufficientCredentialsError(firstName, lastName);
       }
 
       return await this.authService.signUpWithSocial({

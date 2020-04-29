@@ -48,7 +48,7 @@ export class UsersController {
       expirationDate,
       createdAt,
       updatedAt,
-      roles,
+      roles = [],
       ...rest
     } = await this.userService.getUserById(userId);
     return { ...rest, roles: roles.map(({ code }) => code) };
@@ -65,7 +65,7 @@ export class UsersController {
   async getAll(@Query('offset') offset = 0, @Query('limit') limit = 10): Promise<UserResponseDto[]> {
     const users = await this.userService.allUsers(offset, limit);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return users.map(({ id, password, refreshToken, expirationDate, createdAt, updatedAt, roles, ...rest }) => ({
+    return users.map(({ id, password, refreshToken, expirationDate, createdAt, updatedAt, roles = [], ...rest }) => ({
       ...rest,
       roles: roles.map(({ code }) => code),
     }));

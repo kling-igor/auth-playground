@@ -19,6 +19,7 @@ import { MemcachedModule } from './memcached';
 import { DatabaseConnection } from './common/db-connection';
 import { GoogleModule } from './google/google.module';
 import { FacebookModule } from './facebook/facebook.module';
+import { AppleModule } from './apple/apple.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { FacebookModule } from './facebook/facebook.module';
     DataModule,
     GoogleModule,
     FacebookModule,
+    AppleModule,
   ],
   // controllers: [],
   providers: [DatabaseConnection],

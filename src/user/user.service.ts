@@ -93,7 +93,8 @@ export class UserService {
 
     await this.socialRepository.save(socialAccount);
 
-    user.socialAccounts = [...user.socialAccounts, socialAccount];
+    const { socialAccounts = [] } = user;
+    user.socialAccounts = [...socialAccounts, socialAccount];
     await this.userRepository.save(user);
   }
 }

@@ -33,41 +33,41 @@ import { CurrentUser } from '../user/user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 import { SignInUserResponseDto } from '../auth/dto/signin-user.response.dto';
-import { FacebookSigninRequestDto } from './dto/signin-request.dto';
-import { FacebookSignupRequestDto } from './dto/signup-request.dto';
+import { AppleSigninRequestDto } from './dto/signin-request.dto';
+import { AppleSignupRequestDto } from './dto/signup-request.dto';
 import { UserData, InsufficientCredentialsError } from '../common/social';
 
-import { FacebookService } from './facebook.service';
+import { AppleService } from './apple.service';
 
 @ApiTags('Auth')
 @Controller('social')
-export class FacebookController {
-  constructor(private readonly facebookService: FacebookService) {}
+export class AppleController {
+  constructor(private readonly appleService: AppleService) {}
 
-  @Post('signup/facebook')
+  @Post('signup/apple')
   @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({ description: 'Signed up successfully', type: SignInUserResponseDto })
-  @ApiBadRequestResponse({ description: 'Invalid Facebook access token' })
+  @ApiBadRequestResponse({ description: 'Invalid Apple provided credentials' })
   @ApiConflictResponse({ description: 'User already exists' })
-  @ApiBody({ type: FacebookSignupRequestDto })
-  @ApiOperation({ summary: 'Create a new user account based on Facebook access token' })
+  @ApiBody({ type: AppleSignupRequestDto })
+  @ApiOperation({ summary: 'Create a new user account based on Apple provided info' })
   async signUp(
-    @Body('accessToken') accessToken: string,
+    @Body('identityToken') identityToken: string,
     @Body('userData') userData: UserData,
   ): Promise<SignInUserResponseDto> {
-    const result = await this.facebookService.signUp(accessToken, userData);
+    const result = await this.appleService.signUp(identityToken, userData);
     return plainToClass(SignInUserResponseDto, result);
   }
 
-  @Post('signin/facebook')
+  @Post('signin/apple')
   @ApiOkResponse({ description: 'Signed in successfully', type: SignInUserResponseDto })
-  @ApiBadRequestResponse({ description: 'Invalid Facebook access token' })
-  @ApiNotFoundResponse({ description: 'Invalid credentials - user not found with provided Facebook credentials' })
-  @ApiBody({ type: FacebookSigninRequestDto })
-  @ApiOperation({ summary: 'Sign in user by Facebook access token' })
-  async signIn(@Body('accessToken') accessToken: string, @Res() res: Response) {
+  @ApiBadRequestResponse({ description: 'Invalid Apple provided credentials' })
+  @ApiNotFoundResponse({ description: 'Invalid credentials - user not found with provided Apple credentials' })
+  @ApiBody({ type: AppleSigninRequestDto })
+  @ApiOperation({ summary: 'Sign in user by Apple token id' })
+  async signIn(@Body('identityToken') identityToken: string, @Res() res: Response) {
     try {
-      const result = await this.facebookService.signIn(accessToken);
+      const result = await this.appleService.signIn(identityToken);
       res.status(HttpStatus.OK).json(result);
     } catch (e) {
       if (e instanceof InsufficientCredentialsError) {
@@ -83,20 +83,20 @@ export class FacebookController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('link/facebook')
+  @Post('link/apple')
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Link Facebook social account to existent user account' })
-  async link(@Body('accessToken') accessToken: string, @CurrentUser('userId') userId: string) {
-    await this.facebookService.linkAccountToUser(accessToken, userId);
+  @ApiOperation({ summary: 'Link Apple social account to existent user account' })
+  async link(@Body('identityToken') identityToken: string, @CurrentUser('userId') userId: string) {
+    await this.appleService.linkAccountToUser(identityToken, userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('unlink/facebook')
+  @Delete('unlink/apple')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Unlink Facebook social account from user account' })
+  @ApiOperation({ summary: 'Unlink Apple social account from user account' })
   async unlink(@CurrentUser('userId') userId: string): Promise<void> {
-    await this.facebookService.unlinkAccountFromUser(userId);
+    await this.appleService.unlinkAccountFromUser(userId);
   }
 }

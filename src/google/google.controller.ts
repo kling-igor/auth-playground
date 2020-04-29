@@ -35,7 +35,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SignInUserResponseDto } from '../auth/dto/signin-user.response.dto';
 import { GoogleSigninRequestDto } from './dto/signin-request.dto';
 import { GoogleSignupRequestDto } from './dto/signup-request.dto';
-import { UserData, MissingEmailError } from '../common/social';
+import { UserData, InsufficientCredentialsError } from '../common/social';
 
 import { GoogleService } from './google.service';
 
@@ -51,23 +51,9 @@ export class GoogleController {
   @ApiConflictResponse({ description: 'User already exists' })
   @ApiBody({ type: GoogleSignupRequestDto })
   @ApiOperation({ summary: 'Create a new user account based on Google provided info' })
-  async signUp(@Body('tokenId') tokenId: string, @Body('userData') userData: UserData, @Res() res: Response) {
-    // const result = await this.googleService.signUp(tokenId);
-    // return plainToClass(SignInUserResponseDto, result);
-
-    try {
-      const result = await this.googleService.signUp(tokenId, userData);
-      res.status(HttpStatus.CREATED).json(result);
-    } catch (e) {
-      if (e instanceof MissingEmailError) {
-        return res.status(313).send({
-          firstName: e.firstName,
-          lastName: e.lastName,
-        });
-      }
-
-      throw e;
-    }
+  async signUp(@Body('tokenId') tokenId: string, @Body('userData') userData: UserData): Promise<SignInUserResponseDto> {
+    const result = await this.googleService.signUp(tokenId, userData);
+    return plainToClass(SignInUserResponseDto, result);
   }
 
   @Post('signin/google')
@@ -76,9 +62,21 @@ export class GoogleController {
   @ApiNotFoundResponse({ description: 'Invalid credentials - user not found with provided Google credentials' })
   @ApiBody({ type: GoogleSigninRequestDto })
   @ApiOperation({ summary: 'Sign in user by Google token id' })
-  async signIn(@Body('tokenId') tokenId: string): Promise<SignInUserResponseDto> {
-    const result = await this.googleService.signIn(tokenId);
-    return plainToClass(SignInUserResponseDto, result);
+  async signIn(@Body('tokenId') tokenId: string, @Res() res: Response) {
+    try {
+      const result = await this.googleService.signIn(tokenId);
+      res.status(HttpStatus.OK).json(result);
+    } catch (e) {
+      if (e instanceof InsufficientCredentialsError) {
+        return res.status(313).send({
+          email: e.email,
+          firstName: e.firstName,
+          lastName: e.lastName,
+        });
+      }
+
+      throw e;
+    }
   }
 
   @UseGuards(JwtAuthGuard)

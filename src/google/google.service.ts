@@ -16,7 +16,7 @@ import { UserService } from '../user/user.service';
 import { SignInUserResponseDto } from '../auth/dto';
 import { MemcachedService } from '../memcached/memcached.service';
 
-import { UserData, MissingEmailError } from '../common/social';
+import { UserData, InsufficientCredentialsError } from '../common/social';
 
 const NETWORK_NAME = 'google';
 
@@ -28,10 +28,10 @@ export class GoogleService {
     private readonly memcachedService: MemcachedService,
   ) {}
 
-  private async getCert(): Promise<string> {
-    let cert = await this.memcachedService.get('google_cert');
+  private async getCert(kid: string): Promise<string> {
+    let certs = await this.memcachedService.get('google_cert');
 
-    if (!cert) {
+    if (!certs) {
       try {
         const response: AxiosResponse = await axios.get('https://www.googleapis.com/oauth2/v1/certs');
 
@@ -39,24 +39,21 @@ export class GoogleService {
 
         const expirationDate = new Date(headers['expires']);
 
-        cert = Object.values(data)[0];
+        certs = data;
 
         const seconds = differenceInSeconds(expirationDate, new Date());
 
         console.log(`Store Google PEM in memached for ${seconds} seconds`);
-        await this.memcachedService.set('google_cert', cert, seconds);
+        await this.memcachedService.set('google_cert', certs, seconds);
       } catch (e) {
         throw new InternalServerErrorException('Unable to fetch Google PEM');
       }
     }
 
-    return cert;
+    return certs[kid];
   }
 
   private async decodeToken(userToken: string): Promise<any> {
-    // console.log(Buffer.from('Hello World!').toString('base64'));
-    // console.log(Buffer.from(b64Encoded, 'base64').toString());
-
     const base64Url = userToken.split('.')[0];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jwtHeader = decodeURIComponent(
@@ -67,9 +64,9 @@ export class GoogleService {
         .join(''),
     );
 
-    console.log('jwtHeader:', jwtHeader);
+    const { kid } = JSON.parse(jwtHeader);
 
-    const cert = await this.getCert();
+    const cert = await this.getCert(kid);
 
     try {
       return jwt.verify(userToken, cert, { algorithms: ['RS256'], ignoreExpiration: false });
@@ -154,11 +151,19 @@ export class GoogleService {
     if (!user) {
       if (!email) {
         // unable to create account without email
-        throw new MissingEmailError(firstName, lastName);
+        throw new InsufficientCredentialsError(firstName, lastName);
       }
 
       // check for google profile data to create user account
       // throw new NotFoundException(`No user with Google account ${sub} found`);
+
+      return await this.authService.signUpWithSocial({
+        login: email,
+        firstName,
+        lastName,
+        socialNetwork: NETWORK_NAME,
+        socialId: sub,
+      });
     }
 
     return await this.authService.issueNewToken(user);

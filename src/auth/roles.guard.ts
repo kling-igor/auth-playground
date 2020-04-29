@@ -17,12 +17,16 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    const hasRole = user.roles.some(role => roles.includes(role));
-
-    if (!user.roles || !hasRole) {
+    if (!user.roles) {
       throw new ForbiddenException('Forbidden');
     }
 
-    return hasRole;
+    const hasRole = user.roles.some(role => roles.includes(role));
+
+    if (!hasRole) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    return true;
   }
 }
