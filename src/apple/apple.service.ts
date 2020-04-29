@@ -26,17 +26,9 @@ export class AppleService {
   }
 
   private async decodeToken(identityToken: string): Promise<any> {
-    const base64Url = identityToken.split('.')[0];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jwtHeader = decodeURIComponent(
-      Buffer.from(base64, 'base64')
-        .toString('ascii')
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(''),
-    );
-
-    const { kid } = JSON.parse(jwtHeader);
+    const {
+      header: { kid },
+    } = jwt.decode(identityToken, { complete: true }) as any;
 
     const publicKey: string = await new Promise((resolve, reject) => {
       this.jwksClient.getSigningKey(kid, (err, key) => {
