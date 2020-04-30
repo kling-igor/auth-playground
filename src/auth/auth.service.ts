@@ -5,6 +5,8 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { addDays, compareAsc } from 'date-fns';
 import * as argon2 from 'argon2';
@@ -12,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { UserService } from '../user/user.service';
 import { UserEntity } from '../user/user.entity';
+import { SingleUseCodeEntity } from './single-use-code.entity';
 import { SignInUserRequestDto, SignUpUserRequestDto, SignInUserResponseDto, SignUpSocialUserRequestDto } from './dto';
 
 const REFRESH_EXPIRES_IN_DAYS = parseInt(process.env.REFRESH_EXPIRES_IN_DAYS || '');
@@ -30,7 +33,11 @@ const expirationDate = () =>
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
+  constructor(
+    @InjectRepository(SingleUseCodeEntity) private readonly singleUseCodesRepository: Repository<SingleUseCodeEntity>,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async signUp(signUpUserDto: SignUpUserRequestDto): Promise<SignInUserResponseDto> {
     let user: UserEntity = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
@@ -141,5 +148,33 @@ export class AuthService {
       jwt: this.jwtService.sign(jwtPayload),
       refreshToken: newRefreshToken,
     };
+  }
+
+  async siginInWithCode(code: string): Promise<SignInUserResponseDto> {
+    const record = await this.singleUseCodesRepository
+      .createQueryBuilder('single_use_codes')
+      .innerJoinAndSelect('single_use_codes.user', 'user')
+      .innerJoinAndSelect('single_use_codes.socialAccount', 'social')
+      .where('single_use_codes.code = :code', { code })
+      .cache(true)
+      .getOne();
+
+    // если не найдена - 404
+    if (!record) {
+      throw new NotFoundException('Wrong code.');
+    }
+
+    if (compareAsc(Date.now(), record.expirationDate) >= 0) {
+      // если просрочена - убираем из таблицы
+      await this.singleUseCodesRepository
+        .createQueryBuilder('single_use_codes')
+        .delete()
+        .where('single_use_codes.code = :code', { code })
+        .execute();
+      throw new UnauthorizedException('Invalid code (expired)');
+    }
+
+    // иначе формируем jwt
+    return await this.issueNewToken(record.user);
   }
 }

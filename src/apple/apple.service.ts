@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/camelcase */
 import { Injectable, BadRequestException, InternalServerErrorException, ConflictException } from '@nestjs/common';
 
 import * as jwt from 'jsonwebtoken';
 import * as jwksClient from 'jwks-rsa';
+import * as querystring from 'querystring';
+import axios from 'axios';
 
 import { AuthService } from '../auth/auth.service';
 import { UserService } from '../user/user.service';
@@ -11,6 +14,36 @@ import { MemcachedService } from '../memcached/memcached.service';
 import { UserData, InsufficientCredentialsError } from '../common/social';
 
 const NETWORK_NAME = 'apple';
+
+const PRIVATE_KEY = `
+-----BEGIN PRIVATE KEY-----
+MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg8e6/X/nZX2YatnA7
+DAz7ItwD27Q2LkjDJeodopOgxdmgCgYIKoZIzj0DAQehRANCAARPu6hRldP2NOnP
+rwpnbhatfQDyuhxvj3e8N/p2hhhzWc1fYRXWUjFQm3p7I0znG/49TdTjGW+9S1d5
+5aqsUXfc
+-----END PRIVATE KEY-----`;
+const TEAM_ID = 'R62DYZ4A77';
+const CLIENT_ID = 'org.amg.capitalizer.client';
+const KEY_ID = '5V6ZRMHP42';
+
+const getClientSecret = () => {
+  // sign with RSA SHA256
+  const headers = {
+    kid: KEY_ID,
+    typ: undefined as any, // is there another way to remove type?
+  };
+  const claims = {
+    iss: TEAM_ID,
+    aud: 'https://appleid.apple.com',
+    sub: CLIENT_ID,
+  };
+
+  return jwt.sign(claims, PRIVATE_KEY, {
+    algorithm: 'ES256',
+    header: headers,
+    expiresIn: '24h',
+  });
+};
 
 @Injectable()
 export class AppleService {
@@ -82,6 +115,38 @@ export class AppleService {
       socialNetwork: NETWORK_NAME,
       socialId: sub,
     });
+  }
+
+  async appleCallback(code: string): Promise<string> {
+    const clientSecret = getClientSecret();
+
+    const requestBody = {
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: 'https://ssomobile.herokuapp.com/api/v1/social/signin/apple/callback',
+      client_id: CLIENT_ID,
+      client_secret: clientSecret,
+      scope: 'name email',
+    };
+
+    try {
+      const { data } = await axios.request({
+        method: 'POST',
+        url: 'https://appleid.apple.com/auth/token',
+        data: querystring.stringify(requestBody),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
+
+      const { access_token, refresh_token, id_token } = data;
+      // в этом месте ведем себя так же как если бы id_token был получен от клиента напрямую и провалидирован приватным ключом
+
+      const { payload, header } = jwt.decode(id_token, { complete: true }) as any;
+
+      const { email, sub, aud } = payload;
+      // ищем пользователя с apple аккаунтом sub
+      // если найден - создаем код и заносим в базу с коротким временем протухания (1мин)
+      // возвращаем код
+    } catch (e) {}
   }
 
   async signIn(identityToken: string): Promise<SignInUserResponseDto> {

@@ -82,6 +82,12 @@ export class AppleController {
     }
   }
 
+  @Post('signin/apple/callback')
+  async appleCallback(@Body('identityToken') code: string, @Res() res: Response) {
+    const singleUseCode = await this.appleService.appleCallback(code);
+    res.redirect(303, `/?code=${singleUseCode}`);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('link/apple')
   @HttpCode(HttpStatus.CREATED)

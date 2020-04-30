@@ -13,8 +13,7 @@ import {
 } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
-import { SignInUserRequestDto, SignUpUserRequestDto } from './dto';
-import { SignInUserResponseDto } from './dto/signin-user.response.dto';
+import { SignInUserRequestDto, SignUpUserRequestDto, SignInUserResponseDto, SingleUseCodeRequestDto } from './dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -53,5 +52,15 @@ export class AuthController {
     @Body('refreshToken') refreshToken: string,
   ): Promise<SignInUserResponseDto> {
     return this.authService.refresh(login, refreshToken);
+  }
+
+  @Post('signin/code')
+  @ApiOkResponse({ description: 'Signed in successfully', type: SignInUserResponseDto })
+  @ApiBadRequestResponse({ description: 'Missing credentials' })
+  @ApiNotFoundResponse({ description: 'Invalid credentials' })
+  @ApiBody({ type: SingleUseCodeRequestDto })
+  @ApiOperation({ summary: 'Sign in with single use code' })
+  async siginInWithCode(@Body('code') code: string): Promise<SignInUserResponseDto> {
+    return this.authService.siginInWithCode(code);
   }
 }
