@@ -39,6 +39,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * singup user
+   * @param signUpUserDto
+   */
   async signUp(signUpUserDto: SignUpUserRequestDto): Promise<SignInUserResponseDto> {
     let user: UserEntity = await this.userService.getUserByLogin(signUpUserDto.login.toLowerCase());
 
@@ -58,6 +62,10 @@ export class AuthService {
     return await this.issueNewToken(user);
   }
 
+  /**
+   * signin user with social account
+   * @param signUpUserDto
+   */
   async signUpWithSocial(signUpUserDto: SignUpSocialUserRequestDto): Promise<SignInUserResponseDto> {
     let user = await this.userService.getUserBySocialAccount(signUpUserDto.socialNetwork, signUpUserDto.socialId);
     if (user) {
@@ -88,6 +96,10 @@ export class AuthService {
     return await this.issueNewToken(user);
   }
 
+  /**
+   * signin user by login, password
+   * @param signInUserDto
+   */
   async signIn(signInUserDto: SignInUserRequestDto): Promise<SignInUserResponseDto> {
     const user: UserEntity = await this.userService.getUserByLogin(signInUserDto.login.toLowerCase());
 
@@ -104,6 +116,11 @@ export class AuthService {
     return await this.issueNewToken(user);
   }
 
+  /**
+   * refresh user JWT
+   * @param login
+   * @param refreshToken
+   */
   async refresh(login: string, refreshToken: string): Promise<SignInUserResponseDto> {
     const user: UserEntity = await this.userService.getUserByLogin(login);
     if (!user) {
@@ -124,6 +141,10 @@ export class AuthService {
     return await this.issueNewToken(user);
   }
 
+  /**
+   * issue JWT for user
+   * @param user
+   */
   async issueNewToken(user: UserEntity): Promise<SignInUserResponseDto> {
     const { id: userId, login, roles = [] } = user;
 
@@ -150,21 +171,24 @@ export class AuthService {
     };
   }
 
+  /**
+   * signin by single use code
+   * @param code
+   */
   async siginInWithCode(code: string): Promise<SignInUserResponseDto> {
-    const record = await this.singleUseCodesRepository
+    const singleUseCodeEntry = await this.singleUseCodesRepository
       .createQueryBuilder('single_use_codes')
-      .innerJoinAndSelect('single_use_codes.user', 'user')
       .innerJoinAndSelect('single_use_codes.socialAccount', 'social')
       .where('single_use_codes.code = :code', { code })
       .cache(true)
       .getOne();
 
     // если не найдена - 404
-    if (!record) {
+    if (!singleUseCodeEntry) {
       throw new NotFoundException('Wrong code.');
     }
 
-    if (compareAsc(Date.now(), record.expirationDate) >= 0) {
+    if (compareAsc(Date.now(), singleUseCodeEntry.expirationDate) >= 0) {
       // если просрочена - убираем из таблицы
       await this.singleUseCodesRepository
         .createQueryBuilder('single_use_codes')
@@ -174,7 +198,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid code (expired)');
     }
 
+    const {
+      socialAccount: { socialName, socialId },
+    } = singleUseCodeEntry;
+
+    const user = await this.userService.getUserBySocialAccount(socialName, socialId);
+
     // иначе формируем jwt
-    return await this.issueNewToken(record.user);
+    return await this.issueNewToken(user);
   }
 }

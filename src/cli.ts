@@ -29,56 +29,82 @@ async function bootstrap() {
 
   const singleUseCodesRepository = connection.getRepository(SingleUseCodeEntity);
 
-  const user = await userRepository
-    .createQueryBuilder('users')
-    .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
-    .getOne();
+  // const socialAccount = await socialRepository
+  //   .createQueryBuilder('social_networks')
+  //   .innerJoinAndSelect('social_networks.user', 'users')
+  //   .where('social_networks.socialName = :socialName', { socialName: 'google' })
+  //   .andWhere('social_networks.socialId = :socialId', { socialId: '113872996235412047856' })
+  //   .getOne();
 
-  console.table(user);
+  // console.log('SOCIAL ACC:', socialAccount);
 
-  const socialAccounts = await socialRepository
-    .createQueryBuilder('social_networks')
-    .innerJoinAndSelect('social_networks.user', 'users')
-    .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
-    .getMany();
+  // const user = await userRepository
+  //   .createQueryBuilder('users')
+  //   .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
+  //   .getOne();
 
-  console.table(socialAccounts);
+  // console.table(user);
 
-  const googleAccount = await socialRepository
-    .createQueryBuilder('social_networks')
-    .innerJoinAndSelect('social_networks.user', 'users')
-    .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
-    .andWhere('social_networks.socialName = :socialName', { socialName: 'google' })
-    .getOne();
+  // const socialAccounts = await socialRepository
+  //   .createQueryBuilder('social_networks')
+  //   .innerJoinAndSelect('social_networks.user', 'users')
+  //   .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
+  //   .getMany();
 
-  console.table(googleAccount);
-  console.log(googleAccount);
+  // console.table(socialAccounts);
 
-  const code = uuidv4().replace(/\-/g, '');
-  console.log('CODE:', code);
+  // const googleAccount = await socialRepository
+  //   .createQueryBuilder('social_networks')
+  //   .innerJoinAndSelect('social_networks.user', 'users')
+  //   .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
+  //   .andWhere('social_networks.socialName = :socialName', { socialName: 'google' })
+  //   .getOne();
+
+  // console.table(googleAccount);
+  // console.log(googleAccount);
+
+  // ************
+  // const code = uuidv4().replace(/\-/g, '');
+  // console.log('CODE:', code);
 
   // const singleUseCode = new SingleUseCodeEntity();
   // singleUseCode.code = code;
   // singleUseCode.expirationDate = timestamp(addSeconds(new Date(), 30));
-  // singleUseCode.user = user;
-  // singleUseCode.socialAccount = googleAccount;
+  // singleUseCode.socialAccount = socialAccount;
   // await singleUseCodesRepository.save(singleUseCode);
-
-  // const record = await singleUseCodesRepository
-  //   .createQueryBuilder('single_use_codes')
-  //   .select()
-  //   .where('single_use_codes.code = :code', { code: 'b2baaaf1cc3047199b380ea54d370062' })
-  //   .getOne();
+  // ************
 
   const record = await singleUseCodesRepository
     .createQueryBuilder('single_use_codes')
-    .innerJoinAndSelect('single_use_codes.user', 'user')
     .innerJoinAndSelect('single_use_codes.socialAccount', 'social')
-    .where('single_use_codes.code = :code', { code: 'b2baaaf1cc3047199b380ea54d370062' })
-    .cache(true)
+    .where('single_use_codes.code = :code', { code: '95c215c2593e4a629239a6bf9ec5a7eb' })
     .getOne();
 
   console.log(record);
+
+  const {
+    socialAccount: { socialName, socialId },
+  } = record;
+
+  const user = await userRepository
+    .createQueryBuilder('users')
+    .innerJoinAndSelect('users.socialAccounts', 'social_networks')
+    .where('social_networks.socialName = :socialName', { socialName })
+    .andWhere('social_networks.socialId = :socialId', { socialId })
+    .cache(true)
+    .getOne();
+
+  console.log(user);
+
+  // const record = await singleUseCodesRepository
+  //   .createQueryBuilder('single_use_codes')
+  //   .innerJoinAndSelect('single_use_codes.user', 'user')
+  //   .innerJoinAndSelect('single_use_codes.socialAccount', 'social')
+  //   .where('single_use_codes.code = :code', { code: 'b2baaaf1cc3047199b380ea54d370062' })
+  //   .cache(true)
+  //   .getOne();
+
+  // console.log(record);
 
   /*
   const userRepository = connection.getRepository(UserEntity);

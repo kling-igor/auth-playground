@@ -143,9 +143,7 @@ export class AppleService {
       const { payload, header } = jwt.decode(id_token, { complete: true }) as any;
 
       const { email, sub, aud } = payload;
-      // ищем пользователя с apple аккаунтом sub
-      // если найден - создаем код и заносим в базу с коротким временем протухания (1мин)
-      // возвращаем код
+      return await this.userService.createSingleUseCode(NETWORK_NAME, sub);
     } catch (e) {}
   }
 

@@ -2,16 +2,28 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
+import { v4 as uuidv4 } from 'uuid';
+import { addMinutes, addSeconds } from 'date-fns';
 
 import { UserEntity } from './user.entity';
 import { SocialNetworkEntity } from './social.entity';
+import { SingleUseCodeEntity } from '../auth/single-use-code.entity';
 import { CreateUserDto } from './dto';
+
+const timestamp = (date: Date = new Date()) =>
+  new Date(
+    date
+      .toISOString()
+      .split('.')
+      .shift(),
+  );
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(SocialNetworkEntity) private readonly socialRepository: Repository<SocialNetworkEntity>,
+    @InjectRepository(SingleUseCodeEntity) private readonly singleUseCodesRepository: Repository<SingleUseCodeEntity>,
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
@@ -96,5 +108,25 @@ export class UserService {
     const { socialAccounts = [] } = user;
     user.socialAccounts = [...socialAccounts, socialAccount];
     await this.userRepository.save(user);
+  }
+
+  async createSingleUseCode(socialName: string, socialId: string): Promise<string> {
+    const socialAccount = await this.socialRepository
+      .createQueryBuilder('social_networks')
+      .innerJoinAndSelect('social_networks.user', 'users')
+      .where('social_networks.socialName = :socialName', { socialName })
+      .andWhere('social_networks.socialId = :socialId', { socialId })
+      .getOne();
+
+    const code = uuidv4().replace(/\-/g, '');
+
+    const singleUseCode = new SingleUseCodeEntity();
+    singleUseCode.code = code;
+    singleUseCode.expirationDate = timestamp(addSeconds(new Date(), 30)); // TODO: replace hardcoded value to .env
+    singleUseCode.socialAccount = socialAccount;
+
+    await this.singleUseCodesRepository.save(singleUseCode);
+
+    return code;
   }
 }

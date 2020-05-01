@@ -25,10 +25,6 @@ export class SingleUseCodeEntity {
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: 'expired_at' })
   public expirationDate: Date;
 
-  @OneToOne(() => UserEntity)
-  @JoinColumn()
-  public user: UserEntity;
-
   @OneToOne(() => SocialNetworkEntity)
   @JoinColumn()
   public socialAccount: SocialNetworkEntity;
