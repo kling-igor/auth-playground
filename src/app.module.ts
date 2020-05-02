@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConnectionOptions } from 'typeorm';
 // import { MongooseModule } from '@nestjs/mongoose';
 
@@ -20,6 +21,7 @@ import { DatabaseConnection } from './common/db-connection';
 import { GoogleModule } from './google/google.module';
 import { FacebookModule } from './facebook/facebook.module';
 import { AppleModule } from './apple/apple.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -74,6 +76,7 @@ import { AppleModule } from './apple/apple.module';
       },
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
     FileModule,
@@ -83,6 +86,7 @@ import { AppleModule } from './apple/apple.module';
     GoogleModule,
     FacebookModule,
     AppleModule,
+    TasksModule,
   ],
   // controllers: [],
   providers: [DatabaseConnection],
