@@ -1,31 +1,34 @@
-import {
-  Column,
-  PrimaryColumn,
-  Entity,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinTable,
-  JoinColumn,
-  ManyToMany,
-  OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  Index,
-  Unique,
-} from 'typeorm';
+import { PrimaryGeneratedColumn, Entity, CreateDateColumn, JoinColumn, OneToOne, Column, ManyToOne } from 'typeorm';
+import { Type } from 'class-transformer';
 
-import { UserEntity } from '../user/user.entity';
 import { SocialNetworkEntity } from '../user/social.entity';
 
 @Entity({ name: 'single_use_codes' })
 export class SingleUseCodeEntity {
-  @PrimaryColumn({ unique: true })
+  @PrimaryGeneratedColumn('uuid')
   public code: string;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: 'expired_at' })
-  public expirationDate: Date;
+  // @CreateDateColumn({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP', name: 'expired_at' })
+  // public expirationDate: Date;
 
-  @OneToOne(() => SocialNetworkEntity)
-  @JoinColumn()
+  @Column({
+    name: 'expiration_date',
+    type: 'int',
+    width: 11,
+    nullable: false,
+    readonly: true,
+    default: () => '0',
+    transformer: {
+      to: (value?: Date) => (!value ? value : Math.round(value.getTime() / 1000)),
+      from: (value?: number) => (!value ? value : new Date(value * 1000)),
+    },
+  })
+  @Type(() => Date)
+  expirationDate: Date;
+
+  @ManyToOne(
+    () => SocialNetworkEntity,
+    socialAccount => socialAccount.singleUseCodes,
+  )
   public socialAccount: SocialNetworkEntity;
 }

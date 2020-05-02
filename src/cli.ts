@@ -11,14 +11,6 @@ import { SingleUseCodeEntity } from './auth/single-use-code.entity';
 import { addMinutes, addSeconds } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
-const timestamp = (date: Date = new Date()) =>
-  new Date(
-    date
-      .toISOString()
-      .split('.')
-      .shift(),
-  );
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const connection = getConnection();
@@ -53,27 +45,29 @@ async function bootstrap() {
 
   // console.table(socialAccounts);
 
-  // const googleAccount = await socialRepository
-  //   .createQueryBuilder('social_networks')
-  //   .innerJoinAndSelect('social_networks.user', 'users')
-  //   .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
-  //   .andWhere('social_networks.socialName = :socialName', { socialName: 'google' })
-  //   .getOne();
+  const googleAccount = await socialRepository
+    .createQueryBuilder('social_networks')
+    .innerJoinAndSelect('social_networks.user', 'users')
+    .where('users.login = :login', { login: 'kling-igor@yandex.ru' })
+    .andWhere('social_networks.socialName = :socialName', { socialName: 'google' })
+    .getOne();
 
   // console.table(googleAccount);
   // console.log(googleAccount);
 
   // ************
-  // const code = uuidv4().replace(/\-/g, '');
-  // console.log('CODE:', code);
+  const now = new Date();
+  const expDate = addMinutes(now, 60);
+  console.log('NOW:', now, ' | ', now.toUTCString());
+  console.log('EXP:', expDate, ' | ', expDate.toUTCString());
 
-  // const singleUseCode = new SingleUseCodeEntity();
-  // singleUseCode.code = code;
-  // singleUseCode.expirationDate = timestamp(addSeconds(new Date(), 30));
-  // singleUseCode.socialAccount = socialAccount;
-  // await singleUseCodesRepository.save(singleUseCode);
+  const singleUseCode = new SingleUseCodeEntity();
+  singleUseCode.expirationDate = expDate;
+  singleUseCode.socialAccount = googleAccount;
+  await singleUseCodesRepository.save(singleUseCode);
   // ************
 
+  /*
   const record = await singleUseCodesRepository
     .createQueryBuilder('single_use_codes')
     .innerJoinAndSelect('single_use_codes.socialAccount', 'social')
@@ -81,7 +75,6 @@ async function bootstrap() {
     .getOne();
 
   console.log(record);
-
   const {
     socialAccount: { socialName, socialId },
   } = record;
@@ -95,6 +88,35 @@ async function bootstrap() {
     .getOne();
 
   console.log(user);
+*/
+  /*
+  const now = new Date().toISOString();
+
+  const { affected: count } = await singleUseCodesRepository
+    .createQueryBuilder('single_use_codes')
+    .delete()
+    .where('single_use_codes.expired_at <= :now', { now })
+    .execute();
+
+  console.log('DELETED:', count);
+*/
+  const records = await singleUseCodesRepository
+    .createQueryBuilder('single_use_codes')
+    .select('single_use_codes')
+    .getMany();
+
+  const trans = records.map(({ expirationDate, ...rest }) => ({
+    ...rest,
+    expirationDate,
+    expired: now > expirationDate,
+  }));
+
+  console.table(trans);
+
+  // const now = new Date();
+  // const expDate = addMinutes(now, 60);
+  // console.log('NOW:', now, timestamp(now));
+  // console.log('EXP:', expDate, timestamp(expDate));
 
   // const record = await singleUseCodesRepository
   //   .createQueryBuilder('single_use_codes')

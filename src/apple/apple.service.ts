@@ -123,7 +123,7 @@ export class AppleService {
     const requestBody = {
       grant_type: 'authorization_code',
       code,
-      redirect_uri: 'https://ssomobile.herokuapp.com/api/v1/social/signin/apple/callback',
+      redirect_uri: 'https://ssomobile.herokuapp.com/apple/callback', //'https://ssomobile.herokuapp.com/api/v1/social/signin/apple/callback',
       client_id: CLIENT_ID,
       client_secret: clientSecret,
       scope: 'name email',
@@ -138,13 +138,20 @@ export class AppleService {
       });
 
       const { access_token, refresh_token, id_token } = data;
+      console.log('id_token:', id_token);
       // в этом месте ведем себя так же как если бы id_token был получен от клиента напрямую и провалидирован приватным ключом
 
-      const { payload, header } = jwt.decode(id_token, { complete: true }) as any;
+      try {
+        const { payload, header } = jwt.decode(id_token, { complete: true }) as any;
+        const { email, sub, aud } = payload;
 
-      const { email, sub, aud } = payload;
-      return await this.userService.createSingleUseCode(NETWORK_NAME, sub);
-    } catch (e) {}
+        return await this.userService.createSingleUseCode(NETWORK_NAME, sub);
+      } catch (e) {
+        console.log('DECODE E:', e);
+      }
+    } catch (e) {
+      console.log('E:', e.response.data);
+    }
   }
 
   async signIn(identityToken: string): Promise<SignInUserResponseDto> {

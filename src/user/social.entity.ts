@@ -1,16 +1,19 @@
-import { PrimaryColumn, PrimaryGeneratedColumn, JoinTable, Entity, ManyToOne, Index } from 'typeorm';
+import { Column, PrimaryGeneratedColumn, Entity, ManyToOne, OneToMany, Index } from 'typeorm';
 
 import { UserEntity } from './user.entity';
+import { SingleUseCodeEntity } from '../auth/single-use-code.entity';
 
 @Entity({ name: 'social_networks' })
 export class SocialNetworkEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @PrimaryColumn({ type: 'varchar', length: 20, name: 'social_name' })
+  @Index()
+  @Column({ type: 'varchar', length: 20, name: 'social_name' })
   public socialName: string;
 
-  @PrimaryColumn({ type: 'varchar', length: 255, name: 'social_id' })
+  @Index()
+  @Column({ type: 'varchar', length: 255, name: 'social_id' })
   public socialId: string;
 
   // @ManyToOne(
@@ -34,6 +37,13 @@ export class SocialNetworkEntity {
     user => user.socialAccounts,
   )
   public user: UserEntity;
+
+  @OneToMany(
+    () => SingleUseCodeEntity,
+    singleUseCode => singleUseCode.socialAccount,
+    { eager: true, cascade: true },
+  )
+  public singleUseCodes: SingleUseCodeEntity[];
 }
 
 // CREATE TABLE social_networks

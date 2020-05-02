@@ -23,13 +23,7 @@ const makeRefreshToken = () => uuidv4().replace(/\-/g, '');
 
 const hash = async (str: string) => await argon2.hash(str);
 
-const expirationDate = () =>
-  new Date(
-    addDays(new Date(), REFRESH_EXPIRES_IN_DAYS)
-      .toISOString()
-      .split('.')
-      .shift(),
-  );
+const expirationDate = () => addDays(new Date(), REFRESH_EXPIRES_IN_DAYS);
 
 @Injectable()
 export class AuthService {
@@ -188,13 +182,17 @@ export class AuthService {
       throw new NotFoundException('Wrong code.');
     }
 
-    if (compareAsc(Date.now(), singleUseCodeEntry.expirationDate) >= 0) {
-      // если просрочена - убираем из таблицы
-      await this.singleUseCodesRepository
-        .createQueryBuilder('single_use_codes')
-        .delete()
-        .where('single_use_codes.code = :code', { code })
-        .execute();
+    // в любом случае убираем из таблицы
+    await this.singleUseCodesRepository
+      .createQueryBuilder('single_use_codes')
+      .delete()
+      .where('single_use_codes.code = :code', { code })
+      .execute();
+
+    const now = new Date();
+    const exp = singleUseCodeEntry.expirationDate;
+
+    if (now >= exp) {
       throw new UnauthorizedException('Invalid code (expired)');
     }
 

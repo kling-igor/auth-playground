@@ -3,11 +3,8 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinTable,
-  JoinColumn,
   ManyToMany,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -39,13 +36,13 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 255, name: 'refresh_token' })
   public refreshToken;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: 'token_expires_at' })
+  @CreateDateColumn({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP', name: 'token_expires_at' })
   public expirationDate: Date;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: 'created_at' })
+  @CreateDateColumn({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP', name: 'created_at' })
   public createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: 'updated_at' })
+  @UpdateDateColumn({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP', name: 'updated_at' })
   public updatedAt: Date;
 
   @ManyToMany(
@@ -58,7 +55,7 @@ export class UserEntity {
   @OneToMany(
     () => SocialNetworkEntity,
     socialNetworkEntity => socialNetworkEntity.user,
-    { eager: true /*, cascade: true */ },
+    { eager: true, cascade: true },
   )
   public socialAccounts: SocialNetworkEntity[];
 }

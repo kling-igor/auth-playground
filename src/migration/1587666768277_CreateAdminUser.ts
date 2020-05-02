@@ -5,14 +5,6 @@ import * as argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
 import { addDays } from 'date-fns';
 
-const timestamp = (date: Date = new Date()) =>
-  new Date(
-    date
-      .toISOString()
-      .split('.')
-      .shift(),
-  );
-
 export class CreateAdminUser1587666768277 implements MigrationInterface {
   name = 'CreateAdminUser1587666768277';
 
@@ -23,9 +15,9 @@ export class CreateAdminUser1587666768277 implements MigrationInterface {
     user.login = 'kling-igor@yandex.ru';
     user.password = await argon2.hash(process.env.ADMIN_PASSWORD);
     user.refreshToken = await argon2.hash(uuidv4().replace(/\-/g, ''));
-    user.expirationDate = timestamp(addDays(new Date(), 30));
-    user.createdAt = timestamp();
-    user.updatedAt = timestamp();
+    user.expirationDate = addDays(new Date(), 30);
+    user.createdAt = new Date();
+    user.updatedAt = new Date();
 
     const roleRepository = getRepository(RoleEntity);
     const adminRole = await roleRepository.findOne({ where: { code: 'admin' } });

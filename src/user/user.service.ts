@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
@@ -9,14 +9,6 @@ import { UserEntity } from './user.entity';
 import { SocialNetworkEntity } from './social.entity';
 import { SingleUseCodeEntity } from '../auth/single-use-code.entity';
 import { CreateUserDto } from './dto';
-
-const timestamp = (date: Date = new Date()) =>
-  new Date(
-    date
-      .toISOString()
-      .split('.')
-      .shift(),
-  );
 
 @Injectable()
 export class UserService {
@@ -118,15 +110,17 @@ export class UserService {
       .andWhere('social_networks.socialId = :socialId', { socialId })
       .getOne();
 
-    const code = uuidv4().replace(/\-/g, '');
+    if (!socialAccount) {
+      throw new NotFoundException(`No Apple account ${socialId} found`);
+    }
+
+    const expirationTime = addMinutes(new Date(), 2); // TODO: replace hardcoded value to .env
 
     const singleUseCode = new SingleUseCodeEntity();
-    singleUseCode.code = code;
-    singleUseCode.expirationDate = timestamp(addSeconds(new Date(), 30)); // TODO: replace hardcoded value to .env
+    singleUseCode.expirationDate = expirationTime;
     singleUseCode.socialAccount = socialAccount;
 
-    await this.singleUseCodesRepository.save(singleUseCode);
-
+    const { code } = await this.singleUseCodesRepository.save(singleUseCode);
     return code;
   }
 }

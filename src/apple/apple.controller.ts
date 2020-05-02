@@ -11,6 +11,7 @@ import {
   ClassSerializerInterceptor,
   UseInterceptors,
   Body,
+  BadRequestException,
 } from '@nestjs/common';
 
 import {
@@ -83,9 +84,16 @@ export class AppleController {
   }
 
   @Post('signin/apple/callback')
-  async appleCallback(@Body('identityToken') code: string, @Res() res: Response) {
+  async appleCallback(@Body('code') code: string, @Res() res: Response) {
     const singleUseCode = await this.appleService.appleCallback(code);
-    res.redirect(303, `/?code=${singleUseCode}`);
+
+    console.log('SINGLE USE CODE:', singleUseCode);
+
+    if (singleUseCode) {
+      return res.redirect(303, `/?code=${singleUseCode}`);
+    }
+
+    throw new BadRequestException(`Unable to process Apple callback to make single use code`);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -14,7 +14,7 @@ export class CreateRoles1587666768177 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    const userRepository = getRepository(RoleEntity);
-    await userRepository.clear();
+    const roleRepository = getRepository(RoleEntity);
+    await roleRepository.clear();
   }
 }
